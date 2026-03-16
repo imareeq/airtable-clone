@@ -1,5 +1,4 @@
 import { getSession } from "~/server/better-auth/server";
-import { LatestPost } from "~/app/_components/post";
 import { api, HydrateClient } from "~/trpc/server";
 import { auth } from "~/server/better-auth";
 import { headers } from "next/headers";
@@ -43,7 +42,6 @@ export default async function AuthenticatedHome() {
               </form>
             </div>
           </div>
-          <LatestPost />
         </div>
       </main>
     </HydrateClient>
