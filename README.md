@@ -1,10 +1,12 @@
 # Airtable Clone — 1 Week Sprint Plan
 
 ## Day 1 — Project scaffolding + auth + base/table creation
-*T3 stack, Postgres, Google OAuth, base/table data model*
+
+_T3 stack, Postgres, Google OAuth, base/table data model_
 
 - [✅] Init T3 app (`create-t3-app`) — NextAuth, Prisma, tRPC, Tailwind; deploy skeleton to Vercel
 - [✅] Configure Google OAuth via NextAuth; protect routes
+- [✅] Airtable-matched login UI
 - [ ] Design Postgres schema: `User`, `Base`, `Table`, `Column`, `Row`, `Cell` — cells stored as JSONB value per (row, column) for dynamic column flexibility
 - [ ] tRPC routers: `base.create`, `base.list`, `table.create`, `table.list`
 - [ ] Airtable-matched sidebar UI: bases list, table tabs, top nav bar — pixel-match Airtable's left nav, colored base icons, tab strip
@@ -14,7 +16,8 @@
 ---
 
 ## Day 2 — Core table UI + cell editing + keyboard nav
-*TanStack Table, editable cells, arrow/tab navigation*
+
+_TanStack Table, editable cells, arrow/tab navigation_
 
 - [ ] Integrate TanStack Table with server data; render rows + columns
 - [ ] Dynamic column add — Text and Number types with type-safe input rendering
@@ -28,7 +31,8 @@
 ---
 
 ## Day 3 — 100k row performance — virtualization + infinite scroll
-*TanStack Virtualizer, tRPC cursor pagination, 100k seed button*
+
+_TanStack Virtualizer, tRPC cursor pagination, 100k seed button_
 
 - [ ] Switch data fetching to `useInfiniteQuery` with cursor-based pagination (fetch 100 rows/page)
 - [ ] Wrap table body in `@tanstack/react-virtual` — only render visible rows in DOM; use `overscan: 5` and fixed row height (34px) for performance
@@ -44,7 +48,8 @@
 ---
 
 ## Day 4 — Search, filter, sort — all at DB level
-*Global search, column filters, sort — pushed to Prisma/SQL*
+
+_Global search, column filters, sort — pushed to Prisma/SQL_
 
 - [ ] Global search bar → tRPC `rows.list` accepts `search` param → Prisma `WHERE cell.value ILIKE '%q%'` with 300ms debounce
 - [ ] Column filter UI (filter icon in header):
@@ -60,7 +65,8 @@
 ---
 
 ## Day 5 — Views + polish + ship
-*Named views, hide/show columns, polish, Slack updates*
+
+_Named views, hide/show columns, polish, Slack updates_
 
 - [ ] Add `View` model to Prisma: `{ id, tableId, name, filters: Json, sorts: Json, hiddenColumns: Json, search: String }`
 - [ ] tRPC: `view.create`, `view.update`, `view.list`, `view.delete`

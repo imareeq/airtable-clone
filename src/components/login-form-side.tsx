@@ -1,10 +1,4 @@
-import { authClient } from "~/server/better-auth/client";
-import AppleIcon from "./apple-icon";
-import GoogleIcon from "./google-icon";
 import Logo from "./logo";
-import { Button } from "./ui/button";
-import { Field, FieldLabel } from "./ui/field";
-import { Input } from "./ui/input";
 import LoginEmailForm from "./login-email-form";
 import LoginSocialsButton from "./login-socials-button";
 import LoginFooter from "./login-footer";
