@@ -3,7 +3,7 @@
 ## Day 1 — Project scaffolding + auth + base/table creation
 *T3 stack, Postgres, Google OAuth, base/table data model*
 
-- [ ] Init T3 app (`create-t3-app`) — NextAuth, Prisma, tRPC, Tailwind; deploy skeleton to Vercel
+- [✅] Init T3 app (`create-t3-app`) — NextAuth, Prisma, tRPC, Tailwind; deploy skeleton to Vercel
 - [ ] Configure Google OAuth via NextAuth; protect routes
 - [ ] Design Postgres schema: `User`, `Base`, `Table`, `Column`, `Row`, `Cell` — cells stored as JSONB value per (row, column) for dynamic column flexibility
 - [ ] tRPC routers: `base.create`, `base.list`, `table.create`, `table.list`
