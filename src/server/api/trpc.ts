@@ -9,7 +9,7 @@
 
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 
 import { auth } from "~/server/better-auth";
 import { db } from "~/server/db";
@@ -30,6 +30,11 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth.api.getSession({
     headers: opts.headers,
   });
+
+  if (!db) {
+    throw new Error("Database client failed to initialize");
+  }
+  
   return {
     db,
     session,
@@ -131,4 +136,101 @@ export const protectedProcedure = t.procedure
         session: { ...ctx.session, user: ctx.session.user },
       },
     });
+  });
+
+/**
+ * Base ownership procedure
+ */
+export const baseProcedure = protectedProcedure
+  .input(z.object({ baseId: z.string() }))
+  .use(async ({ ctx, input, next }) => {
+    const base = await ctx.db.base.findUnique({
+      where: { id: input.baseId, ownerId: ctx.session.user.id },
+    });
+    if (!base) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Base not found or you don't have access to it",
+      });
+    }
+    return next({ ctx: { ...ctx, base } });
+  });
+
+/**
+ * Table ownership procedure
+ */
+export const tableProcedure = protectedProcedure
+  .input(z.object({ tableId: z.string() }))
+  .use(async ({ ctx, input, next }) => {
+    const table = await ctx.db.table.findFirst({
+      where: {
+        id: input.tableId,
+        base: {
+          ownerId: ctx.session.user.id,
+        },
+      },
+    });
+    if (!table) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Table not found or you don't have access to it",
+      });
+    }
+    return next({ ctx: { ...ctx, table } });
+  });
+
+/**
+ * Column ownership procedure
+ */
+export const columnProcedure = protectedProcedure
+  .input(z.object({ columnId: z.string() }))
+  .use(async ({ ctx, input, next }) => {
+    const column = await ctx.db.column.findFirst({
+      where: {
+        id: input.columnId,
+        table: {
+          base: {
+            ownerId: ctx.session.user.id,
+          },
+        },
+      },
+      include: {
+        table: true,
+      },
+    });
+    if (!column) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Column not found or you don't have access to it",
+      });
+    }
+    return next({ ctx: { ...ctx, column } });
+  });
+
+/**
+ * View ownership procedure
+ */
+export const viewProcedure = protectedProcedure
+  .input(z.object({ viewId: z.string() }))
+  .use(async ({ ctx, input, next }) => {
+    const view = await ctx.db.view.findFirst({
+      where: {
+        id: input.viewId,
+        table: {
+          base: {
+            ownerId: ctx.session.user.id,
+          },
+        },
+      },
+      include: {
+        table: true,
+      },
+    });
+    if (!view) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "View not found or you don't have access to it",
+      });
+    }
+    return next({ ctx: { ...ctx, view } });
   });
