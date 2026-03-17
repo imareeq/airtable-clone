@@ -1,3 +1,4 @@
+import { TooltipProvider } from "~/components/ui/tooltip";
 import "~/styles/globals.css";
 
 import { TRPCReactProvider } from "~/trpc/react";
@@ -8,7 +9,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </TRPCReactProvider>
       </body>
     </html>
   );

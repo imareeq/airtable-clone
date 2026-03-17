@@ -1,6 +1,6 @@
 import { cn } from "~/lib/utils";
 
-export default function Logo({
+export default function AirtableIcon({
   className,
   ...props
 }: React.SVGProps<SVGSVGElement>) {

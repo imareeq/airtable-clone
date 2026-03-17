@@ -4,12 +4,12 @@
 
 _T3 stack, Postgres, Google OAuth, base/table data model_
 
-- [✅] Init T3 app (`create-t3-app`) — NextAuth, Prisma, tRPC, Tailwind; deploy skeleton to Vercel
-- [✅] Configure Google OAuth via NextAuth; protect routes
-- [✅] Airtable-matched login UI
-- [ ] Design Postgres schema: `User`, `Base`, `Table`, `Column`, `Row`, `Cell` — cells stored as JSONB value per (row, column) for dynamic column flexibility
-- [ ] tRPC routers: `base.create`, `base.list`, `table.create`, `table.list`
+- [x] Init T3 app (`create-t3-app`) — NextAuth, Prisma, tRPC, Tailwind; deploy skeleton to Vercel
+- [x] Configure Google OAuth via NextAuth; protect routes
+- [x] Airtable-matched login UI
 - [ ] Airtable-matched sidebar UI: bases list, table tabs, top nav bar — pixel-match Airtable's left nav, colored base icons, tab strip
+- [ ] Design Postgres schema: `User`, `Base`, `Table (metadata)`, `Column (metadata)` — cells stored as JSONB value per (row, column) for dynamic column flexibility
+- [ ] tRPC routers: `base.create`, `base.list`, `table.create`, `table.list`
 
 **✓ End of day:** Can log in with Google, create a base, create tables inside it — deployed to Vercel
 
