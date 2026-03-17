@@ -65,9 +65,9 @@ export function NavMain({
                     <SidebarMenuSub>
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <div className="flex flex-row items-center gap-2.5 pl-1.5">
+                          <div className="flex flex-row items-center gap-2.5 pl-1.5 text-muted-foreground">
                             {subItem.icon && subItem.icon}
-                            <span className="text-muted-foreground/75 text-[11px] leading-snug whitespace-normal">
+                            <span className="text-muted-foreground text-[11px] leading-snug whitespace-normal">
                               {subItem.title}
                             </span>
                           </div>
