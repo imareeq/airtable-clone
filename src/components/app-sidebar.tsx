@@ -8,13 +8,27 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
 } from "~/components/ui/sidebar";
 import {
   HouseIcon,
   StarIcon,
   ShareIcon,
   UsersThreeIcon,
+  GearIcon,
+  QuestionIcon,
+  BookOpenIcon,
+  ShoppingBagOpenIcon,
+  UploadSimpleIcon,
+  PlusIcon,
 } from "@phosphor-icons/react";
+import { Separator } from "./ui/separator";
+import { cn } from "~/lib/utils";
+import { url } from "node:inspector";
+import { Button } from "./ui/button";
 
 const data = {
   user: {
@@ -52,37 +66,65 @@ const data = {
       icon: <UsersThreeIcon />,
       items: [
         {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
+          title: "My First Workspace",
           url: "#",
         },
       ],
     },
   ],
+  footer: [
+    {
+      title: "Templates and apps",
+      url: "#",
+      icon: <BookOpenIcon />,
+    },
+    {
+      title: "Marketplace",
+      url: "#",
+      icon: <ShoppingBagOpenIcon />,
+    },
+    {
+      title: "Import",
+      url: "#",
+      icon: <UploadSimpleIcon />,
+    },
+  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { state } = useSidebar();
+
   return (
     <Sidebar
-      className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+      className="bg-background top-(--header-height) h-[calc(100svh-var(--header-height))]! pb-2"
       {...props}
     >
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
+
+      <SidebarFooter className={state === "collapsed" ? "text-muted-foreground/75 flex flex-col items-center justify-center" : ""}>
+        <Separator />
+        <SidebarMenu>
+          {data.footer.map((el) => (
+            <SidebarMenuItem>
+              <SidebarMenuButton>
+                {el.icon}
+                <span>{el.title}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+        <Button
+          variant={state === "collapsed" ? "outline" : "default"}
+          className={cn(
+            "flex flex-row items-center gap-2 text-xs font-semibold",
+            state === "collapsed" ? "w-5.5! h-5.5!" : "h-9 w-full",
+          )}
+        >
+          <PlusIcon className="size-4" /> {state !== "collapsed" && "Create"}
+        </Button>
+        {/* <NavUser user={data.user} /> */}
       </SidebarFooter>
     </Sidebar>
   );
