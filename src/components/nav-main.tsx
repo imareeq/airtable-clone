@@ -18,6 +18,7 @@ import {
 } from "~/components/ui/sidebar";
 import { CaretRightIcon } from "@phosphor-icons/react";
 import { cn } from "~/lib/utils";
+import { Separator } from "./ui/separator";
 
 export function NavMain({
   items,
@@ -77,6 +78,7 @@ export function NavMain({
             </SidebarMenuItem>
           </Collapsible>
         ))}
+        {state === "collapsed" && <Separator />}
       </SidebarMenu>
     </SidebarGroup>
   );
