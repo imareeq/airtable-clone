@@ -1,3 +1,4 @@
+import { Toaster } from "sonner";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import "~/styles/globals.css";
 
@@ -12,6 +13,7 @@ export default function RootLayout({
         <TRPCReactProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </TRPCReactProvider>
+        <Toaster />
       </body>
     </html>
   );

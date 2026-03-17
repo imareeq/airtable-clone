@@ -17,18 +17,14 @@ import {
   StarIcon,
   ShareIcon,
   UsersThreeIcon,
-  GearIcon,
-  QuestionIcon,
   BookOpenIcon,
   ShoppingBagOpenIcon,
   UploadSimpleIcon,
   PlusIcon,
 } from "@phosphor-icons/react";
 import { Separator } from "./ui/separator";
-import { cn } from "~/lib/utils";
-import { url } from "node:inspector";
-import { Button } from "./ui/button";
 import { Item } from "./ui/item";
+import CreateBaseButton from "./create-base";
 
 const data = {
   user: {
@@ -137,15 +133,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
-        <Button
-          variant={state === "collapsed" ? "outline" : "default"}
-          className={cn(
-            "flex flex-row items-center gap-2 text-xs font-semibold",
-            state === "collapsed" ? "h-5.5! w-5.5!" : "h-9 w-full",
-          )}
-        >
-          <PlusIcon className="size-4" /> {state !== "collapsed" && "Create"}
-        </Button>
+        <CreateBaseButton />
       </SidebarFooter>
     </Sidebar>
   );

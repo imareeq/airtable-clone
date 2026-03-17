@@ -5,6 +5,7 @@ import BaseListFilters from "./base-list-filters";
 import BaseCard from "./base-card";
 import BaseListItem from "./base-list-item";
 import { Separator } from "./ui/separator";
+import { api } from "~/trpc/react";
 
 export type ViewType = "list" | "grid";
 export type FilterType = "today" | "7days" | "30days" | "anytime";
@@ -12,6 +13,17 @@ export type FilterType = "today" | "7days" | "30days" | "anytime";
 export default function BaseList() {
   const [view, setView] = useState<ViewType>("list");
   const [filter, setFilter] = useState<FilterType>("anytime");
+
+  const { data: bases, isLoading, error } = api.base.getAll.useQuery();
+
+  if (isLoading)
+    return (
+      <div className="text-muted-foreground text-xs">Loading bases...</div>
+    );
+  if (error)
+    return (
+      <div className="text-destructive text-xs">Error: {error.message}</div>
+    );
 
   return (
     <div className="flex flex-col gap-4">
@@ -22,17 +34,25 @@ export default function BaseList() {
         onFilterChange={setFilter}
       />
 
+      {!bases ||
+        (bases.length === 0 && (
+          <div className="text-muted-foreground text-xs px-2.5">No bases found.</div>
+        ))}
+
       {view === "grid" && (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
-          <BaseCard
-            name={"Untitled Base"}
-            id={"123"}
-            lastUpdated={new Date()}
-          />
+          {bases?.map((base) => (
+            <BaseCard
+              key={base.id}
+              name={base.name}
+              id={base.id}
+              lastUpdated={base.updatedAt}
+            />
+          ))}
         </div>
       )}
 
-      {view === "list" && (
+      {view === "list" && bases?.length !== 0 && (
         <div className="flex w-full flex-col gap-2">
           <div className="flex w-full flex-col gap-1 pb-3">
             <div className="text-muted-foreground grid grid-cols-[1.5fr_1fr_1fr] items-center px-4 py-1.5 text-xs">
@@ -43,11 +63,14 @@ export default function BaseList() {
 
             <Separator />
           </div>
-          <BaseListItem
-            name={"Untitled Base"}
-            lastUpdated={new Date()}
-            workspaceName={"My workspace"}
-          />
+          {bases?.map((base) => (
+            <BaseListItem
+              key={base.id}
+              name={base.name}
+              lastUpdated={base.updatedAt}
+              workspaceName={"My First Workspace"}
+            />
+          ))}
         </div>
       )}
     </div>
