@@ -1,21 +1,21 @@
 # Airtable Clone — 1 Week Sprint Plan
 
-## Day 1 — Project scaffolding + auth + base/table creation
+## Day 1 & 2 — Project scaffolding + auth + base/table creation
 
 _T3 stack, Postgres, Google OAuth, base/table data model_
 
 - [x] Init T3 app (`create-t3-app`) — NextAuth, Prisma, tRPC, Tailwind; deploy skeleton to Vercel
 - [x] Configure Google OAuth via NextAuth; protect routes
 - [x] Airtable-matched login UI
-- [ ] Airtable-matched sidebar UI: bases list, table tabs, top nav bar — pixel-match Airtable's left nav, colored base icons, tab strip
-- [ ] Design Postgres schema: `User`, `Base`, `Table (metadata)`, `Column (metadata)` — cells stored as JSONB value per (row, column) for dynamic column flexibility
+- [x] Airtable-matched sidebar UI: bases list, table tabs, top nav bar — pixel-match Airtable's left nav, colored base icons, tab strip
+- [x] Design Postgres schema: `User`, `Base`, `Table (metadata)`, `Column (metadata)` , `Views` - tables will be dynamically generated for each sheet
 - [ ] tRPC routers: `base.create`, `base.list`, `table.create`, `table.list`
 
-**✓ End of day:** Can log in with Google, create a base, create tables inside it — deployed to Vercel
+**✓ End of day(s):** Can log in with Google, create a base, create tables inside it — deployed to Vercel
 
 ---
 
-## Day 2 — Core table UI + cell editing + keyboard nav
+## Day 3 — Core table UI + cell editing + keyboard nav
 
 _TanStack Table, editable cells, arrow/tab navigation_
 
@@ -30,7 +30,7 @@ _TanStack Table, editable cells, arrow/tab navigation_
 
 ---
 
-## Day 3 — 100k row performance — virtualization + infinite scroll
+## Day 4 — 100k row performance — virtualization + infinite scroll
 
 _TanStack Virtualizer, tRPC cursor pagination, 100k seed button_
 
@@ -47,7 +47,7 @@ _TanStack Virtualizer, tRPC cursor pagination, 100k seed button_
 
 ---
 
-## Day 4 — Search, filter, sort — all at DB level
+## Day 5 — Search, filter, sort — all at DB level
 
 _Global search, column filters, sort — pushed to Prisma/SQL_
 
@@ -64,7 +64,7 @@ _Global search, column filters, sort — pushed to Prisma/SQL_
 
 ---
 
-## Day 5 — Views + polish + ship
+## Day 6 — Views + polish + ship
 
 _Named views, hide/show columns, polish, Slack updates_
 
@@ -82,7 +82,7 @@ _Named views, hide/show columns, polish, Slack updates_
 
 ## Key architectural notes
 
-- [ ] **Schema:** JSONB cells give flexibility for dynamic columns without migrations; add functional indexes for filter/sort performance
+- [ ] **Schema:** Tables (spreadsheets) will be dynamically generated per user and will represent a given spreadsheet 1:1. Existence of spreadsheet table can be verified via the tables metadata table. All insertion and deletions of spreadsheet tables must be done in transactions to ensure data consistency.
 - [ ] **Performance:** Cursor pagination + TanStack Virtualizer = DOM never holds more than ~50 rows; 1M row scrolling is feasible
 - [ ] **Filtering:** All search/filter/sort flows through tRPC into Prisma `where` / `orderBy` — never filter in JS
 - [ ] **Views:** Just saved JSON blobs (filters, sorts, hiddenColumns, search) — load into the same query pipeline from Day 4
