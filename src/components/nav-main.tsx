@@ -31,6 +31,7 @@ export function NavMain({
     items?: {
       title: string;
       url: string;
+      icon?: React.ReactNode;
     }[];
   }[];
 }) {
@@ -41,7 +42,7 @@ export function NavMain({
       <SidebarMenu className={cn("pt-2", state === "expanded" && "pl-2")}>
         {items.map((item) => (
           <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
-            <SidebarMenuItem className="flex w-full flex-row items-center pb-1.5">
+            <SidebarMenuItem className="pb-1.5">
               <SidebarMenuButton
                 asChild
                 tooltip={item.title}
@@ -64,11 +65,12 @@ export function NavMain({
                     <SidebarMenuSub>
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
-                            <a href={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </a>
-                          </SidebarMenuSubButton>
+                          <div className="flex flex-row items-center gap-2.5 pl-1.5">
+                            {subItem.icon && subItem.icon}
+                            <span className="text-muted-foreground/75 text-[11px] leading-snug whitespace-normal">
+                              {subItem.title}
+                            </span>
+                          </div>
                         </SidebarMenuSubItem>
                       ))}
                     </SidebarMenuSub>

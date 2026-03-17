@@ -3,7 +3,6 @@
 import * as React from "react";
 
 import { NavMain } from "~/components/nav-main";
-import { NavUser } from "~/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +28,7 @@ import { Separator } from "./ui/separator";
 import { cn } from "~/lib/utils";
 import { url } from "node:inspector";
 import { Button } from "./ui/button";
+import { Item } from "./ui/item";
 
 const data = {
   user: {
@@ -52,6 +52,14 @@ const data = {
           title:
             "Your starred bases, interfaces, and workspaces will appear here",
           url: "#",
+          icon: (
+            <Item
+              variant="outline"
+              className="flex aspect-square w-7.5 shrink-0 items-center justify-center p-0 opacity-50"
+            >
+              <StarIcon className="size-4" />
+            </Item>
+          ),
         },
       ],
     },
@@ -68,6 +76,14 @@ const data = {
         {
           title: "My First Workspace",
           url: "#",
+          icon: (
+            <Item
+              variant="muted"
+              className="flex aspect-square w-7.5 shrink-0 items-center justify-center p-0"
+            >
+              <UsersThreeIcon className="size-4" />
+            </Item>
+          ),
         },
       ],
     },
@@ -103,11 +119,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
 
-      <SidebarFooter className={state === "collapsed" ? "text-muted-foreground/75 flex flex-col items-center justify-center" : ""}>
+      <SidebarFooter
+        className={
+          state === "collapsed"
+            ? "text-muted-foreground/75 flex flex-col items-center justify-center"
+            : ""
+        }
+      >
         <Separator />
         <SidebarMenu>
           {data.footer.map((el) => (
-            <SidebarMenuItem>
+            <SidebarMenuItem key={el.title}>
               <SidebarMenuButton>
                 {el.icon}
                 <span>{el.title}</span>
@@ -119,12 +141,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           variant={state === "collapsed" ? "outline" : "default"}
           className={cn(
             "flex flex-row items-center gap-2 text-xs font-semibold",
-            state === "collapsed" ? "w-5.5! h-5.5!" : "h-9 w-full",
+            state === "collapsed" ? "h-5.5! w-5.5!" : "h-9 w-full",
           )}
         >
           <PlusIcon className="size-4" /> {state !== "collapsed" && "Create"}
         </Button>
-        {/* <NavUser user={data.user} /> */}
       </SidebarFooter>
     </Sidebar>
   );
