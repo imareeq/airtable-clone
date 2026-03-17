@@ -1,7 +1,7 @@
 "use client";
 
 import LoginFormSide from "~/components/login-form-side";
-import { useIsMobile } from "~/hooks/use-is-mobile";
+import { useIsMobile } from "~/hooks/use-mobile";
 
 export default function LoginPage() {
   const isMobile = useIsMobile();

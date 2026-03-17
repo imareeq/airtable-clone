@@ -1,4 +1,4 @@
-import Logo from "./logo";
+import AirtableIcon from "./airtable-icon";
 import LoginEmailForm from "./login-email-form";
 import LoginSocialsButton from "./login-socials-button";
 import LoginFooter from "./login-footer";
@@ -11,7 +11,7 @@ export default function LoginFormSide() {
     >
       <div className="flex h-full w-full flex-col items-center justify-center gap-5 sm:w-124">
         <div className="flex w-full flex-col gap-12.5 pb-7.5">
-          <Logo />
+          <AirtableIcon />
           <h1 className="text-3xl font-semibold">Sign in to Airtable</h1>
         </div>
 

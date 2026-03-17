@@ -1,49 +1,30 @@
-import { getSession } from "~/server/better-auth/server";
-import { api, HydrateClient } from "~/trpc/server";
-import { auth } from "~/server/better-auth";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { AppSidebar } from "~/components/app-sidebar";
+import { SiteHeader } from "~/components/site-header";
+import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 
-export default async function AuthenticatedHome() {
-  const session = await getSession();
+export const iframeHeight = "800px";
 
-  // Middleware should handle this, but for type safety and double check:
-  if (!session) {
-    redirect("/login");
-  }
+export const description = "A sidebar with a header and a search form.";
 
-  void api.post.getLatest.prefetch();
-
+export default function Page() {
   return (
-    <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-linear-to-b from-[#2e026d] to-[#15162c] text-white">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Dashboard
-          </h1>
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-white">
-              Welcome back, {session.user.name}!
-            </p>
-            <div className="flex flex-col items-center justify-center gap-4">
-              <form>
-                <button
-                  className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
-                  formAction={async () => {
-                    "use server";
-                    await auth.api.signOut({
-                      headers: await headers(),
-                    });
-                    redirect("/login");
-                  }}
-                >
-                  Sign out
-                </button>
-              </form>
+    <div className="[--header-height:calc(--spacing(14))]">
+      <SidebarProvider className="flex flex-col">
+        <SiteHeader />
+        <div className="flex flex-1">
+          <AppSidebar collapsible="icon" />
+          <SidebarInset>
+            <div className="flex flex-1 flex-col gap-4 p-4">
+              <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+                <div className="bg-muted/50 aspect-video rounded-xl" />
+                <div className="bg-muted/50 aspect-video rounded-xl" />
+                <div className="bg-muted/50 aspect-video rounded-xl" />
+              </div>
+              <div className="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />
             </div>
-          </div>
+          </SidebarInset>
         </div>
-      </main>
-    </HydrateClient>
+      </SidebarProvider>
+    </div>
   );
 }
