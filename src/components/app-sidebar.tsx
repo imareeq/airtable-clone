@@ -122,7 +122,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter
         className={
           state === "collapsed"
-            ? "text-muted-foreground/75 flex flex-col items-center justify-center"
+            ? "text-muted-foreground flex flex-col items-center justify-center"
             : ""
         }
       >
