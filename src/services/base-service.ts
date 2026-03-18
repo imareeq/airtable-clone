@@ -1,7 +1,7 @@
-import { type PrismaClient } from "../../generated/prisma";
+import { type PrismaClient, BaseColor, Prisma } from "../../generated/prisma";
 
 export const BaseService = {
-  async getAll(db: PrismaClient, userId: string) {
+  async getAll(db: PrismaClient, userId: string): Promise<Prisma.BaseGetPayload<{ include: { tables: { include: { views: true } } } }>[]> {
     return db.base.findMany({
       where: { ownerId: userId },
       include: {
@@ -23,12 +23,12 @@ export const BaseService = {
   async create(
     db: PrismaClient,
     userId: string,
-    data: { name: string; color?: string },
-  ) {
+    data: { name: string; color?: BaseColor },
+  ): Promise<Prisma.BaseGetPayload<{ include: { tables: { include: { views: true } } } }>> {
     return db.base.create({
       data: {
         name: data.name,
-        color: data.color ?? "BLUE",
+        color: data.color ?? BaseColor.BLUE,
         ownerId: userId,
         tables: {
           create: {
@@ -54,7 +54,7 @@ export const BaseService = {
   async update(
     db: PrismaClient,
     baseId: string,
-    data: { name?: string; color?: any },
+    data: { name?: string; color?: BaseColor },
   ) {
     return db.base.update({
       where: { id: baseId },
