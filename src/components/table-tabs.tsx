@@ -38,7 +38,7 @@ export function TableTabs({
 
   const inactiveTextColor = isDarkBackground
     ? "text-white/70 hover:text-white"
-    : "text-muted-foreground hover:text-foreground";
+    : "text-muted-foreground hover:text-foreground hover:bg-muted-foreground/15";
 
   return (
     <>
@@ -48,8 +48,11 @@ export function TableTabs({
           <button
             key={table.id}
             onClick={() => router.push(`/${baseId}/${table.id}`)}
+            onMouseEnter={() => {
+              router.prefetch(`/${baseId}/${table.id}`);
+            }}
             className={cn(
-              "cursor-pointer relative flex h-8 shrink-0 items-center gap-1 rounded-t-sm border border-b-0 px-3 text-[13px] transition-colors first:border-l-0",
+              "relative flex h-8 shrink-0 cursor-pointer items-center gap-1 rounded-t-sm border border-b-0 px-3 text-[13px] transition-colors first:border-l-0",
               isActive
                 ? "border-border bg-background text-foreground after:bg-background after:absolute after:right-0 after:-bottom-px after:left-0 after:h-px"
                 : cn("border-transparent", inactiveTextColor),

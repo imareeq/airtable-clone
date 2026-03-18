@@ -44,12 +44,37 @@ export default function AppearancePicker({
   const utils = api.useUtils();
 
   const updateBase = api.base.update.useMutation({
-    onSuccess: async () => {
+    onMutate: async ({ color }) => {
+      // 1. Cancel in-flight queries to avoid overwriting our optimistic update
+      await utils.base.getById.cancel({ baseId });
+      await utils.base.getAll.cancel();
+
+      const previousBase = utils.base.getById.getData({ baseId });
+      const previousBases = utils.base.getAll.getData();
+
+      utils.base.getById.setData({ baseId }, (old) =>
+        old ? { ...old, color: color as BaseColor } : old,
+      );
+      utils.base.getAll.setData(undefined, (old) =>
+        old?.map((base) =>
+          base.id === baseId ? { ...base, color: color as BaseColor } : base,
+        ),
+      );
+
+      return { previousBase, previousBases };
+    },
+    onError: (error, _vars, context) => {
+      if (context?.previousBase) {
+        utils.base.getById.setData({ baseId }, context.previousBase);
+      }
+      if (context?.previousBases) {
+        utils.base.getAll.setData(undefined, context.previousBases);
+      }
+      toast.error(`Failed to update color: ${error.message}`);
+    },
+    onSettled: async () => {
       await utils.base.getById.invalidate({ baseId });
       await utils.base.getAll.invalidate();
-    },
-    onError: (error) => {
-      toast.error(`Failed to update color: ${error.message}`);
     },
   });
 
@@ -86,32 +111,27 @@ export default function AppearancePicker({
         <div className="grid grid-cols-10 gap-1.5">
           {COLORS.map((color) => {
             const isSelected = selectedColor === color.id;
-            const isUpdating =
-              updateBase.isPending && updateBase.variables?.color === color.id;
             const baseColorClass = getBaseColorClass(color.id);
 
             return (
               <Button
                 key={color.id}
                 type="button"
-                disabled={updateBase.isPending}
                 onClick={() => handleColorChange(color.id)}
                 className={cn(
                   "relative flex h-7 w-7 items-center justify-center rounded-md transition-all focus:outline-none",
                   `${baseColorClass} hover:${baseColorClass}`,
-                  updateBase.isPending && "cursor-not-allowed opacity-70",
                 )}
                 aria-label={color.id}
                 aria-pressed={isSelected}
               >
-                {isSelected && !isUpdating && (
+                {isSelected && (
                   <CheckIcon
                     weight="bold"
                     className="text-white drop-shadow-sm"
                     size={14}
                   />
                 )}
-                {isUpdating && <Spinner />}
               </Button>
             );
           })}
