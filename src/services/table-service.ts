@@ -1,6 +1,13 @@
 import { type PrismaClient } from "../../generated/prisma";
 
 export const TableService = {
+  async getByBaseId(db: PrismaClient, baseId: string) {
+    return db.table.findMany({
+      where: { baseId },
+      orderBy: { orderIndex: "asc" },
+    });
+  },
+
   async create(db: PrismaClient, baseId: string, name: string) {
     return db.table.create({
       data: {

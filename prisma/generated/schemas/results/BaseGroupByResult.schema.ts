@@ -2,7 +2,6 @@ import * as z from 'zod';
 export const BaseGroupByResultSchema = z.array(z.object({
   id: z.string(),
   name: z.string(),
-  color: z.string(),
   ownerId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -19,7 +18,6 @@ export const BaseGroupByResultSchema = z.array(z.object({
   _min: z.object({
     id: z.string().nullable(),
     name: z.string().nullable(),
-    color: z.string().nullable(),
     ownerId: z.string().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
@@ -27,7 +25,6 @@ export const BaseGroupByResultSchema = z.array(z.object({
   _max: z.object({
     id: z.string().nullable(),
     name: z.string().nullable(),
-    color: z.string().nullable(),
     ownerId: z.string().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()

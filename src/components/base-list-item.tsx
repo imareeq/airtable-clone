@@ -4,19 +4,28 @@ import { Button } from "./ui/button";
 import { cn } from "~/lib/utils";
 import BaseActionsDropdown from "./base-actions-dropdown";
 import Link from "next/link";
+import { BaseColor } from "../../generated/prisma";
+import { getBaseColorClass } from "~/lib/color-utils";
+import { BaseModelSchema } from "prisma/generated/schemas";
+import * as z from "zod";
 
-interface BaseListItemProps {
-  id: string;
-  name: string;
-  lastUpdated: Date;
-  workspaceName: string;
-  className?: string;
-}
+const BaseListItemPropsSchema = BaseModelSchema.pick({
+  id: true,
+  name: true,
+  color: true,
+  updatedAt: true,
+}).extend({
+  workspaceName: z.string(),
+  className: z.string().optional(),
+});
+
+type BaseListItemProps = z.infer<typeof BaseListItemPropsSchema>;
 
 export default function BaseListItem({
   id,
   name,
-  lastUpdated,
+  color,
+  updatedAt,
   workspaceName,
   className,
 }: BaseListItemProps) {
@@ -37,7 +46,7 @@ export default function BaseListItem({
   return (
     <div
       className={cn(
-        "relative group hover:bg-muted-foreground/10 grid cursor-pointer grid-cols-[1.5fr_1fr_1fr] items-center rounded-md px-4 py-1.5 transition-colors",
+        "group hover:bg-muted-foreground/10 relative grid cursor-pointer grid-cols-[1.5fr_1fr_1fr] items-center rounded-md px-4 py-1.5 transition-colors",
         isOpen && "bg-gray-100",
         className,
       )}
@@ -48,7 +57,12 @@ export default function BaseListItem({
         aria-label={`Open base ${name}`}
       />
       <div className="flex min-w-0 items-center gap-3">
-        <div className="bg-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold text-white uppercase">
+        <div
+          className={cn(
+            "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold text-white uppercase",
+            getBaseColorClass(color),
+          )}
+        >
           {initials}
         </div>
 
@@ -88,7 +102,7 @@ export default function BaseListItem({
         </div>
 
         <span className="text-muted-foreground truncate pl-20 text-xs">
-          Opened {getRelativeTimeString(lastUpdated)}
+          Opened {getRelativeTimeString(updatedAt)}
         </span>
       </div>
 

@@ -38,7 +38,7 @@ export default async function AppLayout({
       <div className="[--header-height:calc(--spacing(14))]">
         <SidebarProvider open={false}>
           <AppSidebar collapsible="icon" />
-          <SidebarInset className="bg-muted flex h-auto w-full flex-col gap-5">
+          <SidebarInset className="bg-muted flex h-auto w-full flex-col">
             <AppHeader baseId={baseId} />
             {children}
           </SidebarInset>

@@ -15,10 +15,13 @@ import { cn } from "~/lib/utils";
 import { useState } from "react";
 import BaseActionsDropdown from "./base-actions-dropdown";
 import Link from "next/link";
+import { BaseColor } from "../../generated/prisma";
+import { getBaseColorClass } from "~/lib/color-utils";
 
 interface BaseCardProps {
   name: string;
   id: string;
+  color: BaseColor;
   lastUpdated: Date;
   className?: string;
 }
@@ -26,6 +29,7 @@ interface BaseCardProps {
 export default function BaseCard({
   name,
   id,
+  color,
   lastUpdated,
   className,
 }: BaseCardProps) {
@@ -78,7 +82,10 @@ export default function BaseCard({
         </div>
 
         <div
-          className="bg-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl font-medium text-white"
+          className={cn(
+            "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl font-medium text-white",
+            getBaseColorClass(color),
+          )}
           aria-hidden="true"
         >
           {initials}

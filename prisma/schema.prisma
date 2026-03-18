@@ -84,10 +84,33 @@ model Verification {
 
 // my stuff
 
+enum BaseColor {
+  PINK_LIGHT
+  PEACH_LIGHT
+  YELLOW_LIGHT
+  GREEN_LIGHT
+  TEAL_LIGHT
+  SKY_LIGHT
+  BLUE_LIGHT
+  PURPLE_LIGHT
+  LAVENDER_LIGHT
+  GRAY_LIGHT
+  RED
+  ORANGE
+  YELLOW
+  GREEN
+  TEAL
+  CYAN
+  BLUE
+  PINK
+  PURPLE
+  GRAY
+}
+
 model Base {
-  id        String   @id @default(nanoid(17))
+  id        String    @id @default(nanoid(17))
   name      String
-  color     String   @default("#0ea5e9")
+  color     BaseColor @default(BLUE)
   ownerId   String
   owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   tables    Table[]

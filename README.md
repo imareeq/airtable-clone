@@ -9,7 +9,7 @@ _T3 stack, Postgres, Google OAuth, base/table data model_
 - [x] Airtable-matched login UI
 - [x] Airtable-matched sidebar UI: bases list, table tabs, top nav bar — pixel-match Airtable's left nav, colored base icons, tab strip
 - [x] Design Postgres schema: `User`, `Base`, `Table (metadata)`, `Column (metadata)` , `Views` - tables will be dynamically generated for each sheet
-- [ ] tRPC routers: `base.create`, `base.list`, `table.create`, `table.list`
+- [x] tRPC routers: `base.create`, `base.list`, `table.create`, `table.list`
 
 **✓ End of day(s):** Can log in with Google, create a base, create tables inside it — deployed to Vercel
 

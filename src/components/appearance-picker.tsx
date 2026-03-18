@@ -6,28 +6,30 @@ import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
+import { BaseColor } from "../../generated/prisma";
+import { getBaseColorClass } from "~/lib/color-utils";
 
-const COLORS = [
-  { id: "pink-light", hex: "#fbc8d4" },
-  { id: "peach-light", hex: "#fcd3b0" },
-  { id: "yellow-light", hex: "#fde9a2" },
-  { id: "green-light", hex: "#c6eacc" },
-  { id: "teal-light", hex: "#b2e5e0" },
-  { id: "sky-light", hex: "#bde4f9" },
-  { id: "blue-light", hex: "#bdd5f8" },
-  { id: "purple-light", hex: "#d5c8f5" },
-  { id: "lavender-light", hex: "#e8c8f0" },
-  { id: "gray-light", hex: "#e0e0e0" },
-  { id: "red", hex: "#f03e3e" },
-  { id: "orange", hex: "#f76707" },
-  { id: "yellow", hex: "#f59f00" },
-  { id: "green", hex: "#2f9e44" },
-  { id: "teal", hex: "#0c8599" },
-  { id: "cyan", hex: "#1098ad" },
-  { id: "blue", hex: "#1971c2" },
-  { id: "pink", hex: "#c2255c" },
-  { id: "purple", hex: "#6741d9" },
-  { id: "gray", hex: "#495057" },
+export const COLORS = [
+  { id: BaseColor.PINK_LIGHT, hex: "#fbc8d4" },
+  { id: BaseColor.PEACH_LIGHT, hex: "#fcd3b0" },
+  { id: BaseColor.YELLOW_LIGHT, hex: "#fde9a2" },
+  { id: BaseColor.GREEN_LIGHT, hex: "#c6eacc" },
+  { id: BaseColor.TEAL_LIGHT, hex: "#b2e5e0" },
+  { id: BaseColor.SKY_LIGHT, hex: "#bde4f9" },
+  { id: BaseColor.BLUE_LIGHT, hex: "#bdd5f8" },
+  { id: BaseColor.PURPLE_LIGHT, hex: "#d5c8f5" },
+  { id: BaseColor.LAVENDER_LIGHT, hex: "#e8c8f0" },
+  { id: BaseColor.GRAY_LIGHT, hex: "#e0e0e0" },
+  { id: BaseColor.RED, hex: "#f03e3e" },
+  { id: BaseColor.ORANGE, hex: "#f76707" },
+  { id: BaseColor.YELLOW, hex: "#f59f00" },
+  { id: BaseColor.GREEN, hex: "#2f9e44" },
+  { id: BaseColor.TEAL, hex: "#0c8599" },
+  { id: BaseColor.CYAN, hex: "#1098ad" },
+  { id: BaseColor.BLUE, hex: "#1971c2" },
+  { id: BaseColor.PINK, hex: "#c2255c" },
+  { id: BaseColor.PURPLE, hex: "#6741d9" },
+  { id: BaseColor.GRAY, hex: "#495057" },
 ];
 
 export default function AppearancePicker({
@@ -35,7 +37,7 @@ export default function AppearancePicker({
   selectedColor,
 }: {
   baseId: string;
-  selectedColor: string;
+  selectedColor: BaseColor;
 }) {
   const [tab, setTab] = useState<"color" | "icon">("color");
   const utils = api.useUtils();
@@ -50,7 +52,7 @@ export default function AppearancePicker({
     },
   });
 
-  const handleColorChange = (colorId: string) => {
+  const handleColorChange = (colorId: BaseColor) => {
     if (colorId === selectedColor) return;
 
     updateBase.mutate({
@@ -92,9 +94,9 @@ export default function AppearancePicker({
                 type="button"
                 disabled={updateBase.isPending}
                 onClick={() => handleColorChange(color.id)}
-                style={{ backgroundColor: color.hex }}
                 className={cn(
                   "relative flex h-7 w-7 items-center justify-center rounded-md transition-all hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+                  getBaseColorClass(color.id),
                   updateBase.isPending && "cursor-not-allowed opacity-70",
                 )}
                 aria-label={color.id}

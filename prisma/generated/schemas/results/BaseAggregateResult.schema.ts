@@ -12,7 +12,6 @@ export const BaseAggregateResultSchema = z.object({  _count: z.object({
   _min: z.object({
     id: z.string().nullable(),
     name: z.string().nullable(),
-    color: z.string().nullable(),
     ownerId: z.string().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
@@ -20,7 +19,6 @@ export const BaseAggregateResultSchema = z.object({  _count: z.object({
   _max: z.object({
     id: z.string().nullable(),
     name: z.string().nullable(),
-    color: z.string().nullable(),
     ownerId: z.string().nullable(),
     createdAt: z.date().nullable(),
     updatedAt: z.date().nullable()
