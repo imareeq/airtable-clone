@@ -13,6 +13,8 @@ import {
 } from "@phosphor-icons/react";
 import AirtablePlusFillIcon from "./airtable-plus-fill-icon";
 import { useIsMobile } from "~/hooks/use-mobile";
+import { cn } from "~/lib/utils";
+import { getBaseColorClass } from "~/lib/color-utils";
 
 export default function AppHeader({ baseId }: { baseId: string }) {
   const {
@@ -80,7 +82,10 @@ export default function AppHeader({ baseId }: { baseId: string }) {
               <LinkIcon />
             </Button>
 
-            <Button size="lg" className="rounded-xl leading-none">
+            <Button
+              size="lg"
+              className={cn("rounded-xl leading-none", getBaseColorClass(base.color))}
+            >
               {isMobile ? <UsersIcon /> : "Share"}
             </Button>
           </div>
