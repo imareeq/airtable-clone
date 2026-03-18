@@ -35,7 +35,9 @@ export default function BaseList() {
       />
 
       {(!bases || bases.length === 0) && (
-        <div className="text-muted-foreground text-xs px-2.5">No bases found.</div>
+        <div className="text-muted-foreground px-2.5 text-xs">
+          No bases found.
+        </div>
       )}
 
       {view === "grid" && (
