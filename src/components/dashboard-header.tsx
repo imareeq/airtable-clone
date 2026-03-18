@@ -36,7 +36,7 @@ export function DashboardHeader() {
           <Button variant="outline" className="h-6.5 w-6.5 rounded-full">
             <BellIcon />
           </Button>
-          <NavUser />
+          <NavUser className="pr-1" />
         </div>
       </div>
     </header>
