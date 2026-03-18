@@ -15,7 +15,7 @@ import { cn } from "~/lib/utils";
 import { useState } from "react";
 import BaseActionsDropdown from "./base-actions-dropdown";
 import Link from "next/link";
-import { BaseColor } from "../../generated/prisma";
+import { type BaseColor } from "../../generated/prisma";
 import { getBaseColorClass } from "~/lib/color-utils";
 
 interface BaseCardProps {
@@ -24,6 +24,8 @@ interface BaseCardProps {
   color: BaseColor;
   lastUpdated: Date;
   className?: string;
+  firstTableId: string;
+  firstViewId: string;
 }
 
 export default function BaseCard({
@@ -32,6 +34,8 @@ export default function BaseCard({
   color,
   lastUpdated,
   className,
+  firstTableId,
+  firstViewId,
 }: BaseCardProps) {
   const initials = name.slice(0, 2).trim() || "Un";
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -50,6 +54,8 @@ export default function BaseCard({
     return `${diffInDays} days ago`;
   };
 
+  const href = `/${id}/${firstTableId}/${firstViewId}`;
+
   return (
     <Card
       className={cn(
@@ -59,7 +65,7 @@ export default function BaseCard({
       )}
     >
       <Link
-        href={`/${id}/tableId`}
+        href={href}
         className="absolute inset-0 z-0"
         aria-label={`Open base ${name}`}
       />

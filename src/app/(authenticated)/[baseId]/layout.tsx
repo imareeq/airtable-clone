@@ -34,8 +34,8 @@ export default async function AppLayout({
   const { baseId } = await params;
 
   return (
-    <div className="min-h-screen">
-      <div className="[--header-height:calc(--spacing(14))]">
+    <div className="h-screen overflow-hidden">
+      <div className="h-full [--header-height:calc(--spacing(14))]">
         <SidebarProvider open={false}>
           <AppSidebar collapsible="icon" />
           <SidebarInset className="bg-muted flex h-auto w-full flex-col">

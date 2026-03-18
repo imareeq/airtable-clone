@@ -4,12 +4,19 @@ export const BaseService = {
   async getAll(db: PrismaClient, userId: string) {
     return db.base.findMany({
       where: { ownerId: userId },
-      select: {
-        id: true,
-        name: true,
-        color: true,
-        updatedAt: true,
+      include: {
+        tables: {
+          orderBy: { orderIndex: "asc" },
+          take: 1,
+          include: {
+            views: {
+              orderBy: { createdAt: "asc" },
+              take: 1,
+            },
+          },
+        },
       },
+      orderBy: { updatedAt: "desc" },
     });
   },
 
@@ -21,8 +28,25 @@ export const BaseService = {
     return db.base.create({
       data: {
         name: data.name,
-        color: data.color ?? "#0ea5e9",
+        color: data.color ?? "BLUE",
         ownerId: userId,
+        tables: {
+          create: {
+            name: "Table 1",
+            views: {
+              create: {
+                name: "Grid view",
+              },
+            },
+          },
+        },
+      },
+      include: {
+        tables: {
+          include: {
+            views: true,
+          },
+        },
       },
     });
   },
@@ -30,7 +54,7 @@ export const BaseService = {
   async update(
     db: PrismaClient,
     baseId: string,
-    data: { name?: string; color?: string },
+    data: { name?: string; color?: any },
   ) {
     return db.base.update({
       where: { id: baseId },

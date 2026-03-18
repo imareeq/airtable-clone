@@ -25,7 +25,12 @@ export function TableTabs({
   const createTable = api.table.create.useMutation({
     onSuccess: async (newTable) => {
       await utils.table.getByBaseId.invalidate({ baseId });
-      router.push(`/${baseId}/${newTable.id}`);
+      const firstViewId = newTable.views?.[0]?.id;
+      if (firstViewId) {
+        router.push(`/${baseId}/${newTable.id}/${firstViewId}`);
+      } else {
+        router.push(`/${baseId}/${newTable.id}`);
+      }
     },
   });
 
@@ -44,12 +49,18 @@ export function TableTabs({
     <>
       {tables.map((table) => {
         const isActive = table.id === activeTableId;
+        const firstViewId = table.views?.[0]?.id;
+        
+        if (!firstViewId) return null;
+        
+        const path = `/${baseId}/${table.id}/${firstViewId}`;
+
         return (
           <button
             key={table.id}
-            onClick={() => router.push(`/${baseId}/${table.id}`)}
+            onClick={() => router.push(path)}
             onMouseEnter={() => {
-              router.prefetch(`/${baseId}/${table.id}`);
+              router.prefetch(path);
             }}
             className={cn(
               "relative flex h-8 shrink-0 cursor-pointer items-center gap-1 rounded-t-sm border border-b-0 px-3 text-[13px] transition-colors first:border-l-0",

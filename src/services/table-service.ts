@@ -5,6 +5,12 @@ export const TableService = {
     return db.table.findMany({
       where: { baseId },
       orderBy: { orderIndex: "asc" },
+      include: {
+        views: {
+          orderBy: { createdAt: "asc" },
+          take: 1,
+        },
+      },
     });
   },
 
@@ -13,6 +19,14 @@ export const TableService = {
       data: {
         name,
         baseId,
+        views: {
+          create: {
+            name: "Grid view",
+          },
+        },
+      },
+      include: {
+        views: true,
       },
     });
   },
