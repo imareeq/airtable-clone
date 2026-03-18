@@ -66,6 +66,7 @@ export default function BaseList() {
           {bases?.map((base) => (
             <BaseListItem
               key={base.id}
+              id={base.id}
               name={base.name}
               lastUpdated={base.updatedAt}
               workspaceName={"My First Workspace"}

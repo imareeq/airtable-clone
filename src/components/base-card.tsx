@@ -14,6 +14,7 @@ import { Card, CardContent } from "./ui/card";
 import { cn } from "~/lib/utils";
 import { useState } from "react";
 import BaseActionsDropdown from "./base-actions-dropdown";
+import Link from "next/link";
 
 interface BaseCardProps {
   name: string;
@@ -53,6 +54,11 @@ export default function BaseCard({
         className,
       )}
     >
+      <Link
+        href={`/${id}/tableId`}
+        className="absolute inset-0 z-0"
+        aria-label={`Open base ${name}`}
+      />
       <CardContent className="flex items-center gap-4">
         <div
           className={cn(
@@ -68,11 +74,11 @@ export default function BaseCard({
             <StarIcon size={16} />
           </Button>
 
-          <BaseActionsDropdown baseId="123" onOpenChange={setIsOpen} />
+          <BaseActionsDropdown baseId={id} onOpenChange={setIsOpen} />
         </div>
 
         <div
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#1d70e6] text-2xl font-medium text-white"
+          className="bg-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl font-medium text-white"
           aria-hidden="true"
         >
           {initials}

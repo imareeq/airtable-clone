@@ -6,24 +6,16 @@ generator client {
   output   = "../generated/prisma"
 }
 
+generator zod {
+  provider = "prisma-zod-generator"
+}
+
 // NOTE: When using mysql or sqlserver, uncomment the //@db.Text annotations in model Account below
 // Further reading:
 // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
 
 datasource db {
   provider = "postgresql"
-}
-
-model Post {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  createdById String
-
-  @@index([name])
 }
 
 model User {
@@ -36,7 +28,6 @@ model User {
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
-  posts         Post[]
   bases         Base[]
 
   @@unique([email])
@@ -94,7 +85,7 @@ model Verification {
 // my stuff
 
 model Base {
-  id        String   @id @default(cuid())
+  id        String   @id @default(nanoid(17))
   name      String
   color     String   @default("#0ea5e9")
   ownerId   String
@@ -105,7 +96,7 @@ model Base {
 }
 
 model Table {
-  id         String   @id @default(cuid())
+  id         String   @id @default(nanoid(17))
   name       String
   orderIndex Int      @default(0)
   baseId     String
@@ -122,7 +113,7 @@ enum ColumnType {
 }
 
 model Column {
-  id         String     @id @default(cuid())
+  id         String     @id @default(nanoid(17))
   name       String
   type       ColumnType @default(TEXT)
   orderIndex Int        @default(0)
@@ -133,7 +124,7 @@ model Column {
 }
 
 model View {
-  id            String   @id @default(cuid())
+  id            String   @id @default(nanoid(17))
   name          String
   tableId       String
   table         Table    @relation(fields: [tableId], references: [id], onDelete: Cascade)
