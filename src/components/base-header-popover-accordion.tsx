@@ -14,16 +14,16 @@ export default function BaseHeaderDropdownAccordion({
   baseColor: string;
 }) {
   return (
-    <Accordion type="multiple">
+    <Accordion type="multiple" className="border-0 border-t px-0">
       <AccordionItem value="appearance-picker">
-        <AccordionTrigger>Appearance</AccordionTrigger>
+        <AccordionTrigger className="py-4 text-[17px] font-semibold">Appearance</AccordionTrigger>
         <AccordionContent>
           <AppearancePicker baseId={baseId} selectedColor={baseColor} />
         </AccordionContent>
       </AccordionItem>
 
       <AccordionItem value="base-guide">
-        <AccordionTrigger>Base guide</AccordionTrigger>
+        <AccordionTrigger className="py-4 text-[17px] font-semibold">Base guide</AccordionTrigger>
         <AccordionContent>
           <p>
             Teammates will see this when they first open the base - add a
