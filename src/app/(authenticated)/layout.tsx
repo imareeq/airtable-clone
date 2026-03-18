@@ -12,5 +12,5 @@ export default function AuthenticatedLayout({
 }: {
   children: ReactNode;
 }) {
-  return <div className="min-h-screen bg-slate-900">{children}</div>;
+  return <div className="min-h-screen">{children}</div>;
 }

@@ -3,8 +3,10 @@ import { StarIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import { cn } from "~/lib/utils";
 import BaseActionsDropdown from "./base-actions-dropdown";
+import Link from "next/link";
 
 interface BaseListItemProps {
+  id: string;
   name: string;
   lastUpdated: Date;
   workspaceName: string;
@@ -12,6 +14,7 @@ interface BaseListItemProps {
 }
 
 export default function BaseListItem({
+  id,
   name,
   lastUpdated,
   workspaceName,
@@ -34,13 +37,18 @@ export default function BaseListItem({
   return (
     <div
       className={cn(
-        "group hover:bg-muted-foreground/10 grid cursor-pointer grid-cols-[1.5fr_1fr_1fr] items-center rounded-md px-4 py-1.5 transition-colors",
+        "relative group hover:bg-muted-foreground/10 grid cursor-pointer grid-cols-[1.5fr_1fr_1fr] items-center rounded-md px-4 py-1.5 transition-colors",
         isOpen && "bg-gray-100",
         className,
       )}
     >
+      <Link
+        href={`/${id}/tableId`}
+        className="absolute inset-0 z-0"
+        aria-label={`Open base ${name}`}
+      />
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#1d70e6] text-[10px] font-bold text-white uppercase">
+        <div className="bg-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold text-white uppercase">
           {initials}
         </div>
 
@@ -57,7 +65,7 @@ export default function BaseListItem({
         </div>
       </div>
 
-      <div className="relative flex min-w-0 items-center -left-20">
+      <div className="relative -left-20 flex min-w-0 items-center">
         <div
           className={cn(
             "absolute left-0 flex items-center gap-0 transition-opacity",
@@ -73,7 +81,7 @@ export default function BaseListItem({
           </Button>
           <BaseActionsDropdown
             onOpenChange={setIsOpen}
-            baseId="123"
+            baseId={id}
             variant="ghost"
             className=""
           />
