@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import AppHeader from "~/components/app-header";
+import { AppSidebar } from "~/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { api } from "~/trpc/server";
 
@@ -35,15 +36,12 @@ export default async function AppLayout({
   return (
     <div className="min-h-screen">
       <div className="[--header-height:calc(--spacing(14))]">
-        <SidebarProvider className="flex flex-col">
-          {/* App sidebar here */}
-          <div className="flex flex-1">
-            <SidebarInset className="bg-muted flex h-auto w-full flex-col gap-5">
-              <AppHeader baseId={baseId} />
-              {/* Inset content */}
-              {children}
-            </SidebarInset>
-          </div>
+        <SidebarProvider open={false}>
+          <AppSidebar collapsible="icon" />
+          <SidebarInset className="bg-muted flex h-auto w-full flex-col gap-5">
+            <AppHeader baseId={baseId} />
+            {children}
+          </SidebarInset>
         </SidebarProvider>
       </div>
     </div>
