@@ -8,28 +8,29 @@ import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { BaseColor } from "../../generated/prisma";
 import { getBaseColorClass } from "~/lib/color-utils";
+import { Spinner } from "./ui/spinner";
 
 export const COLORS = [
-  { id: BaseColor.PINK_LIGHT, hex: "#fbc8d4" },
-  { id: BaseColor.PEACH_LIGHT, hex: "#fcd3b0" },
-  { id: BaseColor.YELLOW_LIGHT, hex: "#fde9a2" },
-  { id: BaseColor.GREEN_LIGHT, hex: "#c6eacc" },
-  { id: BaseColor.TEAL_LIGHT, hex: "#b2e5e0" },
-  { id: BaseColor.SKY_LIGHT, hex: "#bde4f9" },
-  { id: BaseColor.BLUE_LIGHT, hex: "#bdd5f8" },
-  { id: BaseColor.PURPLE_LIGHT, hex: "#d5c8f5" },
-  { id: BaseColor.LAVENDER_LIGHT, hex: "#e8c8f0" },
-  { id: BaseColor.GRAY_LIGHT, hex: "#e0e0e0" },
-  { id: BaseColor.RED, hex: "#f03e3e" },
-  { id: BaseColor.ORANGE, hex: "#f76707" },
-  { id: BaseColor.YELLOW, hex: "#f59f00" },
-  { id: BaseColor.GREEN, hex: "#2f9e44" },
-  { id: BaseColor.TEAL, hex: "#0c8599" },
-  { id: BaseColor.CYAN, hex: "#1098ad" },
-  { id: BaseColor.BLUE, hex: "#1971c2" },
-  { id: BaseColor.PINK, hex: "#c2255c" },
-  { id: BaseColor.PURPLE, hex: "#6741d9" },
-  { id: BaseColor.GRAY, hex: "#495057" },
+  { id: BaseColor.PINK_LIGHT },
+  { id: BaseColor.PEACH_LIGHT },
+  { id: BaseColor.YELLOW_LIGHT },
+  { id: BaseColor.GREEN_LIGHT },
+  { id: BaseColor.TEAL_LIGHT },
+  { id: BaseColor.SKY_LIGHT },
+  { id: BaseColor.BLUE_LIGHT },
+  { id: BaseColor.LAVENDER_LIGHT },
+  { id: BaseColor.PURPLE_LIGHT },
+  { id: BaseColor.GRAY_LIGHT },
+  { id: BaseColor.RED },
+  { id: BaseColor.ORANGE },
+  { id: BaseColor.YELLOW },
+  { id: BaseColor.GREEN },
+  { id: BaseColor.TEAL },
+  { id: BaseColor.CYAN },
+  { id: BaseColor.BLUE },
+  { id: BaseColor.PINK },
+  { id: BaseColor.PURPLE },
+  { id: BaseColor.GRAY },
 ];
 
 export default function AppearancePicker({
@@ -87,6 +88,7 @@ export default function AppearancePicker({
             const isSelected = selectedColor === color.id;
             const isUpdating =
               updateBase.isPending && updateBase.variables?.color === color.id;
+            const baseColorClass = getBaseColorClass(color.id);
 
             return (
               <Button
@@ -95,8 +97,8 @@ export default function AppearancePicker({
                 disabled={updateBase.isPending}
                 onClick={() => handleColorChange(color.id)}
                 className={cn(
-                  "relative flex h-7 w-7 items-center justify-center rounded-md transition-all hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-                  getBaseColorClass(color.id),
+                  "relative flex h-7 w-7 items-center justify-center rounded-md transition-all focus:outline-none",
+                  `${baseColorClass} hover:${baseColorClass}`,
                   updateBase.isPending && "cursor-not-allowed opacity-70",
                 )}
                 aria-label={color.id}
@@ -109,9 +111,7 @@ export default function AppearancePicker({
                     size={14}
                   />
                 )}
-                {isUpdating && (
-                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                )}
+                {isUpdating && <Spinner />}
               </Button>
             );
           })}

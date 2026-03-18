@@ -4,13 +4,19 @@ import { useRouter } from "next/navigation";
 import { CaretDownIcon, PlusIcon } from "@phosphor-icons/react";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
+import { Button } from "./ui/button";
 
 interface TableTabsProps {
   activeTableId: string;
   baseId: string;
+  isDarkBackground?: boolean;
 }
 
-export function TableTabs({ activeTableId, baseId }: TableTabsProps) {
+export function TableTabs({
+  activeTableId,
+  baseId,
+  isDarkBackground,
+}: TableTabsProps) {
   const router = useRouter();
   const utils = api.useUtils();
 
@@ -30,9 +36,12 @@ export function TableTabs({ activeTableId, baseId }: TableTabsProps) {
     });
   };
 
+  const inactiveTextColor = isDarkBackground
+    ? "text-white/70 hover:text-white"
+    : "text-muted-foreground hover:text-foreground";
+
   return (
     <>
-    
       {tables.map((table) => {
         const isActive = table.id === activeTableId;
         return (
@@ -40,10 +49,10 @@ export function TableTabs({ activeTableId, baseId }: TableTabsProps) {
             key={table.id}
             onClick={() => router.push(`/${baseId}/${table.id}`)}
             className={cn(
-              "relative flex h-8 shrink-0 items-center gap-1 rounded-t-sm border border-b-0 px-3 text-xs transition-colors",
+              "cursor-pointer relative flex h-8 shrink-0 items-center gap-1 rounded-t-sm border border-b-0 px-3 text-[13px] transition-colors first:border-l-0",
               isActive
-                ? "border-border bg-background text-foreground after:bg-background after:absolute after:right-0 after:bottom-[-1px] after:left-0 after:h-px"
-                : "text-muted-foreground hover:text-foreground border-transparent",
+                ? "border-border bg-background text-foreground after:bg-background after:absolute after:right-0 after:-bottom-px after:left-0 after:h-px"
+                : cn("border-transparent", inactiveTextColor),
             )}
           >
             <span>{table.name}</span>
@@ -54,16 +63,24 @@ export function TableTabs({ activeTableId, baseId }: TableTabsProps) {
         );
       })}
 
-      <div className="bg-border mx-1 h-4 w-px self-center" />
+      <div
+        className={cn(
+          "mx-1 h-4 w-px self-center",
+          isDarkBackground ? "bg-white/20" : "bg-border",
+        )}
+      />
 
-      <button
+      <Button
         onClick={handleCreateTable}
+        variant="ghost"
         disabled={createTable.isPending}
-        className="text-muted-foreground hover:text-foreground flex h-8 shrink-0 items-center gap-1.5 px-3 text-xs transition-colors disabled:opacity-50"
+        className={cn(
+          "z-100 flex h-8 shrink-0 items-center gap-1.5 px-3 text-[13px] opacity-75 transition-colors hover:bg-inherit hover:opacity-100 disabled:opacity-50",
+        )}
       >
         <PlusIcon className="size-3" />
         <span>Add or import</span>
-      </button>
+      </Button>
     </>
   );
 }
