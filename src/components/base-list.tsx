@@ -34,22 +34,30 @@ export default function BaseList() {
         onFilterChange={setFilter}
       />
 
-      {!bases ||
-        (bases.length === 0 && (
-          <div className="text-muted-foreground text-xs px-2.5">No bases found.</div>
-        ))}
+      {(!bases || bases.length === 0) && (
+        <div className="text-muted-foreground text-xs px-2.5">No bases found.</div>
+      )}
 
       {view === "grid" && (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
-          {bases?.map((base) => (
-            <BaseCard
-              key={base.id}
-              name={base.name}
-              id={base.id}
-              color={base.color}
-              lastUpdated={base.updatedAt}
-            />
-          ))}
+          {bases?.map((base) => {
+            const firstTable = base.tables?.[0];
+            const firstView = firstTable?.views?.[0];
+
+            if (!firstTable || !firstView) return null;
+
+            return (
+              <BaseCard
+                key={base.id}
+                name={base.name}
+                id={base.id}
+                color={base.color}
+                lastUpdated={base.updatedAt}
+                firstTableId={firstTable.id}
+                firstViewId={firstView.id}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -64,16 +72,25 @@ export default function BaseList() {
 
             <Separator />
           </div>
-          {bases?.map((base) => (
-            <BaseListItem
-              key={base.id}
-              id={base.id}
-              name={base.name}
-              color={base.color}
-              updatedAt={base.updatedAt}
-              workspaceName={"My First Workspace"}
-            />
-          ))}
+          {bases?.map((base) => {
+            const firstTable = base.tables?.[0];
+            const firstView = firstTable?.views?.[0];
+
+            if (!firstTable || !firstView) return null;
+
+            return (
+              <BaseListItem
+                key={base.id}
+                id={base.id}
+                name={base.name}
+                color={base.color}
+                updatedAt={base.updatedAt}
+                workspaceName={"My First Workspace"}
+                firstTableId={firstTable.id}
+                firstViewId={firstView.id}
+              />
+            );
+          })}
         </div>
       )}
     </div>

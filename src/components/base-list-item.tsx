@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { cn } from "~/lib/utils";
 import BaseActionsDropdown from "./base-actions-dropdown";
 import Link from "next/link";
-import { BaseColor } from "../../generated/prisma";
+import { type BaseColor } from "../../generated/prisma";
 import { getBaseColorClass } from "~/lib/color-utils";
 import { BaseModelSchema } from "prisma/generated/schemas";
 import * as z from "zod";
@@ -17,6 +17,8 @@ const BaseListItemPropsSchema = BaseModelSchema.pick({
 }).extend({
   workspaceName: z.string(),
   className: z.string().optional(),
+  firstTableId: z.string(),
+  firstViewId: z.string(),
 });
 
 type BaseListItemProps = z.infer<typeof BaseListItemPropsSchema>;
@@ -28,6 +30,8 @@ export default function BaseListItem({
   updatedAt,
   workspaceName,
   className,
+  firstTableId,
+  firstViewId,
 }: BaseListItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const initials = name.slice(0, 2).trim() || "Un";
@@ -43,6 +47,8 @@ export default function BaseListItem({
     return "last month";
   };
 
+  const href = `/${id}/${firstTableId}/${firstViewId}`;
+
   return (
     <div
       className={cn(
@@ -52,7 +58,7 @@ export default function BaseListItem({
       )}
     >
       <Link
-        href={`/${id}/tableId`}
+        href={href}
         className="absolute inset-0 z-0"
         aria-label={`Open base ${name}`}
       />

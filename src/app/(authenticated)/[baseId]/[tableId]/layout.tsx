@@ -9,8 +9,7 @@ export default async function TableLayout({
   params: Promise<{ baseId: string; tableId: string }>;
 }) {
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      <TableNav />
+    <div className="flex h-full flex-1 flex-col overflow-hidden">
       {children}
     </div>
   );

@@ -8,15 +8,19 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { COLORS } from "./appearance-picker";
 import { BaseColor } from "../../generated/prisma";
+import { useRouter } from "next/navigation";
 
 export default function CreateBaseButton() {
   const { state } = useSidebar();
   const utils = api.useUtils();
+  const router = useRouter();
 
   const createBase = api.base.create.useMutation({
     onSuccess: async (newBase) => {
       await utils.base.getAll.invalidate();
-      // router.push(`/base/${newBase.id}`);
+      const firstTable = newBase.tables[0]!;
+      const firstView = firstTable.views[0]!;
+      router.push(`/${newBase.id}/${firstTable.id}/${firstView.id}`);
     },
     onError: (error) => toast.error(`Failed to create base: ${error.message}`),
   });
