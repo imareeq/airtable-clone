@@ -11,11 +11,13 @@ const RenameBaseSchema = z.object({
 export interface RenameBaseFormProps {
   baseId: string;
   baseName: string;
+  className?: string;
 }
 
 export default function RenameBaseForm({
   baseId,
   baseName,
+  className,
 }: RenameBaseFormProps) {
   const utils = api.useUtils();
 
@@ -56,6 +58,7 @@ export default function RenameBaseForm({
               name={field.name}
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
+              className={className}
               autoComplete="off"
             />
           </Field>

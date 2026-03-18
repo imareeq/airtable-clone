@@ -92,9 +92,9 @@ export default function AppearancePicker({
                 type="button"
                 disabled={updateBase.isPending}
                 onClick={() => handleColorChange(color.id)}
+                style={{ backgroundColor: color.hex }}
                 className={cn(
                   "relative flex h-7 w-7 items-center justify-center rounded-md transition-all hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-                  `bg-[${color.hex}]`,
                   updateBase.isPending && "cursor-not-allowed opacity-70",
                 )}
                 aria-label={color.id}

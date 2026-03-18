@@ -6,24 +6,40 @@ import type { Base } from "generated/prisma";
 import BaseHeaderDropdownAccordion from "./base-header-popover-accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Separator } from "./ui/separator";
+import AirtableIcon from "./airtable-icon";
 
 export default function BaseHeaderDropdown({ base }: { base: Base }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost">
+        <Button
+          variant="ghost"
+          className="hover:bg-background text-lg font-semibold"
+        >
+          <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg">
+            <AirtableIcon variant="white" className="size-6" />
+          </div>
           {base.name} <CaretDownIcon />
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-100 p-4">
+      <PopoverContent
+        className="w-100 gap-3 p-4 shadow-lg"
+        align="start"
+        sideOffset={17.5}
+      >
         <div className="flex w-full flex-row items-center justify-between">
-          <RenameBaseForm baseId={base?.id} baseName={base?.name} />
+          <RenameBaseForm
+            baseId={base?.id}
+            baseName={base?.name}
+            className="bg-popover focus:bg-muted border-0 text-xl"
+          />
           <div className="flex flex-row items-center">
             <Button variant="ghost">
               <StarIcon />
             </Button>
             <BaseActionsDropdown
+              variant="ghost"
               baseId={base.id}
               items={["duplicate", "slack-notifications"]}
               showDeleteSeparator={false}
@@ -31,8 +47,6 @@ export default function BaseHeaderDropdown({ base }: { base: Base }) {
             />
           </div>
         </div>
-
-        <Separator />
 
         <div>
           <BaseHeaderDropdownAccordion
