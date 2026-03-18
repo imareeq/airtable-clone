@@ -1,7 +1,5 @@
-import { CaretDownIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import TableNav from "~/components/table-nav";
-import { TableTabs } from "~/components/table-tabs";
 
 export default async function TableLayout({
   children,
