@@ -7,6 +7,7 @@ export const BaseService = {
       select: {
         id: true,
         name: true,
+        color: true,
         updatedAt: true,
       },
     });

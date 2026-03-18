@@ -46,6 +46,7 @@ export default function BaseList() {
               key={base.id}
               name={base.name}
               id={base.id}
+              color={base.color}
               lastUpdated={base.updatedAt}
             />
           ))}
@@ -68,7 +69,8 @@ export default function BaseList() {
               key={base.id}
               id={base.id}
               name={base.name}
-              lastUpdated={base.updatedAt}
+              color={base.color}
+              updatedAt={base.updatedAt}
               workspaceName={"My First Workspace"}
             />
           ))}

@@ -1,6 +1,8 @@
 import * as z from 'zod';
 import type { Prisma } from '../../../../generated/prisma';
 import { StringFieldUpdateOperationsInputObjectSchema as StringFieldUpdateOperationsInputObjectSchema } from './StringFieldUpdateOperationsInput.schema';
+import { BaseColorSchema } from '../enums/BaseColor.schema';
+import { EnumBaseColorFieldUpdateOperationsInputObjectSchema as EnumBaseColorFieldUpdateOperationsInputObjectSchema } from './EnumBaseColorFieldUpdateOperationsInput.schema';
 import { DateTimeFieldUpdateOperationsInputObjectSchema as DateTimeFieldUpdateOperationsInputObjectSchema } from './DateTimeFieldUpdateOperationsInput.schema';
 import { UserUpdateOneRequiredWithoutBasesNestedInputObjectSchema as UserUpdateOneRequiredWithoutBasesNestedInputObjectSchema } from './UserUpdateOneRequiredWithoutBasesNestedInput.schema';
 import { TableUpdateManyWithoutBaseNestedInputObjectSchema as TableUpdateManyWithoutBaseNestedInputObjectSchema } from './TableUpdateManyWithoutBaseNestedInput.schema'
@@ -8,7 +10,7 @@ import { TableUpdateManyWithoutBaseNestedInputObjectSchema as TableUpdateManyWit
 const makeSchema = () => z.object({
   id: z.union([z.string(), z.lazy(() => StringFieldUpdateOperationsInputObjectSchema)]).optional(),
   name: z.union([z.string(), z.lazy(() => StringFieldUpdateOperationsInputObjectSchema)]).optional(),
-  color: z.union([z.string(), z.lazy(() => StringFieldUpdateOperationsInputObjectSchema)]).optional(),
+  color: z.union([BaseColorSchema, z.lazy(() => EnumBaseColorFieldUpdateOperationsInputObjectSchema)]).optional(),
   createdAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
   updatedAt: z.union([z.coerce.date(), z.lazy(() => DateTimeFieldUpdateOperationsInputObjectSchema)]).optional(),
   owner: z.lazy(() => UserUpdateOneRequiredWithoutBasesNestedInputObjectSchema).optional(),

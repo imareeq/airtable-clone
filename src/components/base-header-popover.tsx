@@ -6,6 +6,8 @@ import type { Base } from "generated/prisma";
 import BaseHeaderDropdownAccordion from "./base-header-popover-accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import AirtableIcon from "./airtable-icon";
+import { cn } from "~/lib/utils";
+import { getBaseColorClass } from "~/lib/color-utils";
 
 export default function BaseHeaderDropdown({ base }: { base: Base }) {
   return (
@@ -15,7 +17,12 @@ export default function BaseHeaderDropdown({ base }: { base: Base }) {
           variant="ghost"
           className="hover:bg-background text-lg font-semibold"
         >
-          <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg">
+          <div
+            className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-lg",
+              getBaseColorClass(base.color),
+            )}
+          >
             <AirtableIcon variant="white" className="size-6" />
           </div>
           {base.name} <CaretDownIcon />

@@ -43,6 +43,27 @@
   --sidebar-accent-foreground: oklch(13% 0 0);
   --sidebar-border: oklch(88% 0 0);
   --sidebar-ring: oklch(52% 0.18 250);
+
+  --appearance-pink-light: #fbc8d4;
+  --appearance-peach-light: #fcd3b0;
+  --appearance-yellow-light: #fde9a2;
+  --appearance-green-light: #c6eacc;
+  --appearance-teal-light: #b2e5e0;
+  --appearance-sky-light: #bde4f9;
+  --appearance-blue-light: #bdd5f8;
+  --appearance-purple-light: #d5c8f5;
+  --appearance-lavender-light: #e8c8f0;
+  --appearance-gray-light: #e0e0e0;
+  --appearance-red: #f03e3e;
+  --appearance-orange: #f76707;
+  --appearance-yellow: #f59f00;
+  --appearance-green: #2f9e44;
+  --appearance-teal: #0c8599;
+  --appearance-cyan: #1098ad;
+  --appearance-blue: #1971c2;
+  --appearance-pink: #c2255c;
+  --appearance-purple: #6741d9;
+  --appearance-gray: #495057;
 }
 
 .dark {
@@ -111,6 +132,28 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+
+  --color-appearance-pink-light: var(--appearance-pink-light);
+  --color-appearance-peach-light: var(--appearance-peach-light);
+  --color-appearance-yellow-light: var(--appearance-yellow-light);
+  --color-appearance-green-light: var(--appearance-green-light);
+  --color-appearance-teal-light: var(--appearance-teal-light);
+  --color-appearance-sky-light: var(--appearance-sky-light);
+  --color-appearance-blue-light: var(--appearance-blue-light);
+  --color-appearance-purple-light: var(--appearance-purple-light);
+  --color-appearance-lavender-light: var(--appearance-lavender-light);
+  --color-appearance-gray-light: var(--appearance-gray-light);
+  --color-appearance-red: var(--appearance-red);
+  --color-appearance-orange: var(--appearance-orange);
+  --color-appearance-yellow: var(--appearance-yellow);
+  --color-appearance-green: var(--appearance-green);
+  --color-appearance-teal: var(--appearance-teal);
+  --color-appearance-cyan: var(--appearance-cyan);
+  --color-appearance-blue: var(--appearance-blue);
+  --color-appearance-pink: var(--appearance-pink);
+  --color-appearance-purple: var(--appearance-purple);
+  --color-appearance-gray: var(--appearance-gray);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

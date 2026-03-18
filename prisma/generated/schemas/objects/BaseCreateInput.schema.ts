@@ -1,12 +1,13 @@
 import * as z from 'zod';
 import type { Prisma } from '../../../../generated/prisma';
+import { BaseColorSchema } from '../enums/BaseColor.schema';
 import { UserCreateNestedOneWithoutBasesInputObjectSchema as UserCreateNestedOneWithoutBasesInputObjectSchema } from './UserCreateNestedOneWithoutBasesInput.schema';
 import { TableCreateNestedManyWithoutBaseInputObjectSchema as TableCreateNestedManyWithoutBaseInputObjectSchema } from './TableCreateNestedManyWithoutBaseInput.schema'
 
 const makeSchema = () => z.object({
   id: z.string().optional(),
   name: z.string(),
-  color: z.string().optional(),
+  color: BaseColorSchema.optional(),
   createdAt: z.coerce.date().optional(),
   owner: z.lazy(() => UserCreateNestedOneWithoutBasesInputObjectSchema),
   tables: z.lazy(() => TableCreateNestedManyWithoutBaseInputObjectSchema).optional()

@@ -1,9 +1,10 @@
 import * as z from 'zod';
+import { BaseColorSchema } from '../../enums/BaseColor.schema';
 // prettier-ignore
 export const BaseInputSchema = z.object({
     id: z.string(),
     name: z.string(),
-    color: z.string(),
+    color: BaseColorSchema,
     ownerId: z.string(),
     owner: z.unknown(),
     tables: z.array(z.unknown()),

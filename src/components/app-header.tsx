@@ -26,7 +26,12 @@ export default function AppHeader({ baseId }: { baseId: string }) {
   const isMobile = useIsMobile();
   const [selectedColor, setSelectedColor] = useState("purple");
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <header className="bg-background sticky top-0 z-50 flex h-(--header-height) w-full border-b"></header>
+    );
+  }
+
   if (error) return <div className="text-destructive">{error.message}</div>;
   if (!base) return <div>404</div>;
 
@@ -40,7 +45,11 @@ export default function AppHeader({ baseId }: { baseId: string }) {
         <AppHeaderNav />
 
         <div className="flex basis-1/3 flex-row items-center justify-end gap-4">
-          <Button variant="ghost" className="h-7 w-7 rounded-full" title="Base history">
+          <Button
+            variant="ghost"
+            className="h-7 w-7 rounded-full"
+            title="Base history"
+          >
             <ClockCounterClockwiseIcon className="size-4" />
           </Button>
 
@@ -53,16 +62,27 @@ export default function AppHeader({ baseId }: { baseId: string }) {
           </Button>
 
           <div className="flex flex-row gap-1.5">
-            <Button size="lg" variant="outline" className="rounded-xl leading-none">
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-xl leading-none"
+            >
               <SidebarSimpleIcon />
               {!isMobile && "Launch"}
             </Button>
 
-            <Button size="lg" variant="outline" className="rounded-xl leading-none" title="Copy link">
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-xl leading-none"
+              title="Copy link"
+            >
               <LinkIcon />
             </Button>
 
-            <Button size="lg" className="rounded-xl leading-none">{isMobile ? <UsersIcon /> : "Share"}</Button>
+            <Button size="lg" className="rounded-xl leading-none">
+              {isMobile ? <UsersIcon /> : "Share"}
+            </Button>
           </div>
         </div>
       </div>

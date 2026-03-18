@@ -1,6 +1,8 @@
 import * as z from 'zod';
 import type { Prisma } from '../../../../generated/prisma';
 import { StringFilterObjectSchema as StringFilterObjectSchema } from './StringFilter.schema';
+import { EnumBaseColorFilterObjectSchema as EnumBaseColorFilterObjectSchema } from './EnumBaseColorFilter.schema';
+import { BaseColorSchema } from '../enums/BaseColor.schema';
 import { DateTimeFilterObjectSchema as DateTimeFilterObjectSchema } from './DateTimeFilter.schema'
 
 const basescalarwhereinputSchema = z.object({
@@ -9,7 +11,7 @@ const basescalarwhereinputSchema = z.object({
   NOT: z.union([z.lazy(() => BaseScalarWhereInputObjectSchema), z.lazy(() => BaseScalarWhereInputObjectSchema).array()]).optional(),
   id: z.union([z.lazy(() => StringFilterObjectSchema), z.string()]).optional(),
   name: z.union([z.lazy(() => StringFilterObjectSchema), z.string()]).optional(),
-  color: z.union([z.lazy(() => StringFilterObjectSchema), z.string()]).optional(),
+  color: z.union([z.lazy(() => EnumBaseColorFilterObjectSchema), BaseColorSchema]).optional(),
   ownerId: z.union([z.lazy(() => StringFilterObjectSchema), z.string()]).optional(),
   createdAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional(),
   updatedAt: z.union([z.lazy(() => DateTimeFilterObjectSchema), z.coerce.date()]).optional()

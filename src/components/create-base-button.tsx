@@ -6,6 +6,8 @@ import { Button } from "./ui/button";
 import { useSidebar } from "./ui/sidebar";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
+import { COLORS } from "./appearance-picker";
+import { BaseColor } from "../../generated/prisma";
 
 export default function CreateBaseButton() {
   const { state } = useSidebar();
@@ -20,7 +22,8 @@ export default function CreateBaseButton() {
   });
 
   const handleCreate = () => {
-    createBase.mutate({ name: "Untitled Base" });
+    const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)]?.id ?? BaseColor.BLUE;
+    createBase.mutate({ name: "Untitled Base", color: randomColor });
   };
 
   return (
