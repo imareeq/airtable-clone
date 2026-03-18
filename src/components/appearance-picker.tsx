@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { BaseColor } from "../../generated/prisma";
 import { getBaseColorClass } from "~/lib/color-utils";
-import { Spinner } from "./ui/spinner";
 
 export const COLORS = [
   { id: BaseColor.PINK_LIGHT },
