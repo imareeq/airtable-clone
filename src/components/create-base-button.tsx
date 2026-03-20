@@ -26,7 +26,8 @@ export default function CreateBaseButton() {
   });
 
   const handleCreate = () => {
-    const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)]?.id ?? BaseColor.BLUE;
+    const randomColor =
+      COLORS[Math.floor(Math.random() * COLORS.length)]?.id ?? BaseColor.BLUE;
     createBase.mutate({ name: "Untitled Base", color: randomColor });
   };
 
@@ -40,11 +41,8 @@ export default function CreateBaseButton() {
         state === "collapsed" ? "h-5.5! w-5.5!" : "h-9 w-full",
       )}
     >
-      <PlusIcon
-        className={cn("size-4", createBase.isPending && "animate-spin")}
-      />
-      {state !== "collapsed" &&
-        (createBase.isPending ? "Creating..." : "Create")}
+      <PlusIcon className="size-4" />
+      {state !== "collapsed" && "Create"}
     </Button>
   );
 }
