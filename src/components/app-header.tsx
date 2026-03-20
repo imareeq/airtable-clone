@@ -15,26 +15,13 @@ import AirtablePlusFillIcon from "./airtable-plus-fill-icon";
 import { useIsMobile } from "~/hooks/use-mobile";
 import { cn } from "~/lib/utils";
 import { getBaseColorClass } from "~/lib/color-utils";
+import { useBase } from "~/contexts/base-context";
 
-export default function AppHeader({ baseId }: { baseId: string }) {
-  const {
-    data: base,
-    isLoading,
-    error,
-  } = api.base.getById.useQuery({
-    baseId: baseId,
-  });
+export default function AppHeader() {
+  const base = useBase();
 
   const isMobile = useIsMobile();
-  const [selectedColor, setSelectedColor] = useState("purple");
 
-  if (isLoading) {
-    return (
-      <header className="bg-background sticky top-0 z-50 flex h-(--header-height) w-full border-b"></header>
-    );
-  }
-
-  if (error) return <div className="text-destructive">{error.message}</div>;
   if (!base) return <div>404</div>;
 
   return (
@@ -84,7 +71,10 @@ export default function AppHeader({ baseId }: { baseId: string }) {
 
             <Button
               size="lg"
-              className={cn("rounded-xl leading-none", getBaseColorClass(base.color))}
+              className={cn(
+                "rounded-xl leading-none",
+                getBaseColorClass(base.color),
+              )}
             >
               {isMobile ? <UsersIcon /> : "Share"}
             </Button>

@@ -5,6 +5,7 @@ import { CaretDownIcon, PlusIcon } from "@phosphor-icons/react";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 import { Button } from "./ui/button";
+import { useBase } from "~/contexts/base-context";
 
 interface TableTabsProps {
   activeTableId: string;
@@ -19,12 +20,13 @@ export function TableTabs({
 }: TableTabsProps) {
   const router = useRouter();
   const utils = api.useUtils();
-
-  const { data: tables = [] } = api.table.getByBaseId.useQuery({ baseId });
+  const base = useBase();
+  const tables = base.tables;
 
   const createTable = api.table.create.useMutation({
     onSuccess: async (newTable) => {
-      await utils.table.getByBaseId.invalidate({ baseId });
+      router.refresh();
+      await utils.base.getById.invalidate({ baseId });
       const firstViewId = newTable.views?.[0]?.id;
       if (firstViewId) {
         router.push(`/${baseId}/${newTable.id}/${firstViewId}`);
@@ -49,19 +51,13 @@ export function TableTabs({
     <>
       {tables.map((table) => {
         const isActive = table.id === activeTableId;
-        const firstViewId = table.views?.[0]?.id;
-        
-        if (!firstViewId) return null;
-        
-        const path = `/${baseId}/${table.id}/${firstViewId}`;
+        const path = `/${baseId}/${table.id}`;
 
         return (
           <button
             key={table.id}
             onClick={() => router.push(path)}
-            onMouseEnter={() => {
-              router.prefetch(path);
-            }}
+            onMouseEnter={() => router.prefetch(path)}
             className={cn(
               "relative flex h-8 shrink-0 cursor-pointer items-center gap-1 rounded-t-sm border border-b-0 px-3 text-[13px] transition-colors first:border-l-0",
               isActive

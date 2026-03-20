@@ -2,20 +2,14 @@
 
 import { TableTabs } from "./table-tabs";
 import { useParams } from "next/navigation";
-import { api } from "~/trpc/react";
+import { useBase } from "~/contexts/base-context";
 import { cn } from "~/lib/utils";
 import { getOppositeBaseColorClass, isBaseColorLight } from "~/lib/color-utils";
 import TableNavToolsDropdown from "./table-nav-tools-dropdown";
 
 export default function TableNav() {
-  const params = useParams();
-
-  const baseId = params.baseId as string;
-  const tableId = params.tableId as string;
-
-  const { data: base } = api.base.getById.useQuery({
-    baseId: baseId,
-  });
+  const { baseId, tableId } = useParams<{ baseId: string; tableId: string }>();
+  const base = useBase();
 
   const isDarkBackground = base?.color ? isBaseColorLight(base.color) : false;
 

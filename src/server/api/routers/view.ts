@@ -1,8 +1,15 @@
 import { z } from "zod";
-import { createTRPCRouter, tableProcedure, viewProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  tableProcedure,
+  viewProcedure,
+} from "~/server/api/trpc";
 import { ViewService } from "~/services/view-service";
 
 export const ViewRouter = createTRPCRouter({
+  getById: viewProcedure.query(async ({ ctx }) => {
+    return ctx.view;
+  }),
   create: tableProcedure
     .input(z.object({ tableId: z.string(), name: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -10,14 +17,16 @@ export const ViewRouter = createTRPCRouter({
     }),
 
   update: viewProcedure
-    .input(z.object({ 
-      viewId: z.string(), 
-      name: z.string().optional(),
-      filterConfig: z.any().optional(),
-      sortConfig: z.any().optional(),
-      hiddenColumns: z.any().optional(),
-      searchQuery: z.string().optional().nullable(),
-    }))
+    .input(
+      z.object({
+        viewId: z.string(),
+        name: z.string().optional(),
+        filterConfig: z.any().optional(),
+        sortConfig: z.any().optional(),
+        hiddenColumns: z.any().optional(),
+        searchQuery: z.string().optional().nullable(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       return ViewService.update(ctx.db, input.viewId, input);
     }),

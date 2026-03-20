@@ -1,14 +1,15 @@
 import { z } from "zod";
-import { createTRPCRouter, baseProcedure, tableProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  baseProcedure,
+  tableProcedure,
+} from "~/server/api/trpc";
 import { TableService } from "~/services/table-service";
 
 export const TableRouter = createTRPCRouter({
-  getByBaseId: baseProcedure
-    .input(z.object({ baseId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return TableService.getByBaseId(ctx.db, input.baseId);
-    }),
-
+  getById: tableProcedure.query(async ({ ctx }) => {
+    return ctx.table;
+  }),
   create: baseProcedure
     .input(z.object({ baseId: z.string(), name: z.string() }))
     .mutation(async ({ ctx, input }) => {

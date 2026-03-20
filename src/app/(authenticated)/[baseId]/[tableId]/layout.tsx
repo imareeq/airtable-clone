@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import TableNav from "~/components/table-nav";
+import { TableProvider } from "~/contexts/table-context";
+import { api } from "~/trpc/server";
 
 export default async function TableLayout({
   children,
@@ -8,9 +10,15 @@ export default async function TableLayout({
   children: ReactNode;
   params: Promise<{ baseId: string; tableId: string }>;
 }) {
+  const { tableId } = await params;
+  const table = await api.table.getById({ tableId });
+
   return (
-    <div className="flex h-full flex-1 flex-col overflow-hidden">
-      {children}
-    </div>
+    <TableProvider table={table}>
+      <div className="flex h-full flex-1 flex-col overflow-hidden">
+        <TableNav />
+        {children}
+      </div>
+    </TableProvider>
   );
 }
