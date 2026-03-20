@@ -19,11 +19,11 @@ _T3 stack, Postgres, Google OAuth, base/table data model_
 
 _TanStack Table, editable cells, arrow/tab navigation_
 
-- [ ] Integrate TanStack Table with server data; render rows + columns
+- [x] Integrate TanStack Table with server data; render rows + columns
 - [ ] Dynamic column add — Text and Number types with type-safe input rendering
 - [ ] Click-to-edit cells: inline input, optimistic update via tRPC `cell.upsert`
-- [ ] Keyboard nav: Arrow keys, Tab / Shift+Tab, Enter to commit, Esc to cancel — track active cell with React state; focus management on cell mount
-- [ ] New table → seed with Faker.js default rows (10 rows, 4 columns)
+- [x] Keyboard nav: Arrow keys, Tab / Shift+Tab, Enter to commit, Esc to cancel — track active cell with React state; focus management on cell mount
+- [x] New table → seed with Faker.js default rows (10 rows, 4 columns)
 - [ ] Airtable visual pass: row numbers, column header styling, cell selection highlight, add-column `+` button
 
 **✓ End of day:** Fully interactive table — add columns, edit cells, navigate with keyboard
