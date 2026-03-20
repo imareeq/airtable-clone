@@ -27,6 +27,7 @@ type ActiveCell = {
   rowIndex: number;
   colIndex: number;
   mode: "selected" | "editing";
+  initialValue?: string;
 };
 
 export function Spreadsheet<TData, TValue>({
@@ -98,17 +99,71 @@ export function Spreadsheet<TData, TValue>({
           break;
         default:
           if (e.key.length === 1 && !e.metaKey && !e.ctrlKey) {
-            setActiveCell((p) => (p ? { ...p, mode: "editing" } : null));
+            setActiveCell((p) =>
+              p ? { ...p, mode: "editing", initialValue: e.key } : null,
+            );
           }
       }
     },
     [activeCell, navigate],
   );
 
+  const exitEditing = useCallback(
+    (rowDelta = 0, colDelta = 0) => {
+      setActiveCell({
+        rowIndex: Math.max(
+          0,
+          Math.min(rows.length - 1, activeCell!.rowIndex + rowDelta),
+        ),
+        colIndex: Math.max(
+          0,
+          Math.min(visibleCols.length - 1, activeCell!.colIndex + colDelta),
+        ),
+        mode: "selected",
+      });
+      tableRef.current?.focus({ preventScroll: true });
+    },
+    [activeCell, rows.length, visibleCols.length],
+  );
+
+  const handleCellBlur = useCallback(() => {
+    exitEditing();
+  }, [exitEditing]);
+
+  const handleCellKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        exitEditing();
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        exitEditing(1, 0);
+      }
+      if (e.key === "Tab") {
+        e.preventDefault();
+        e.shiftKey ? exitEditing(0, -1) : exitEditing(0, 1);
+      }
+    },
+    [exitEditing],
+  );
+
+  const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
+    tableRef.current?.focus({ preventScroll: true });
+    setActiveCell({ rowIndex, colIndex, mode: "selected" });
+  }, []);
+
+  const handleCellDoubleClick = useCallback(
+    (rowIndex: number, colIndex: number) => {
+      setActiveCell({ rowIndex, colIndex, mode: "editing" });
+    },
+    [],
+  );
+
   return (
     <div
       ref={tableRef}
-      tabIndex={0}
+      tabIndex={-1}
       onKeyDown={handleTableKeyDown}
       className="h-full w-full overflow-auto outline-none focus:outline-none"
     >
@@ -148,7 +203,7 @@ export function Spreadsheet<TData, TValue>({
                   <span className="group-hover/row-cell:hidden">
                     {rowIndex + 1}
                   </span>
-                  <Checkbox className="hidden size-3.5 cursor-pointer accent-blue-500 group-hover/row-cell:block" />
+                  <Checkbox className="hidden size-3.5 cursor-pointer group-hover/row-cell:block" />
                 </TableCell>
 
                 {row.getVisibleCells().map((cell, colIndex) => {
@@ -165,16 +220,17 @@ export function Spreadsheet<TData, TValue>({
                         "border-border relative w-44 border-r p-0",
                         isSelected && "z-10",
                       )}
-                      onClick={() =>
-                        setActiveCell({ rowIndex, colIndex, mode: "selected" })
-                      }
+                      onClick={() => {
+                        tableRef.current?.focus({ preventScroll: true });
+                        setActiveCell({ rowIndex, colIndex, mode: "selected" });
+                      }}
                       onDoubleClick={() =>
                         setActiveCell({ rowIndex, colIndex, mode: "editing" })
                       }
                     >
                       {isSelected && (
                         <div
-                          className="pointer-events-none absolute inset-0 z-10"
+                          className="pointer-events-none absolute inset-0 z-30"
                           style={{
                             boxShadow: [
                               colIndex !== 0 &&
@@ -190,12 +246,44 @@ export function Spreadsheet<TData, TValue>({
                         />
                       )}
 
-                      <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </div>
+                      {isEditing ? (
+                        <input
+                          autoFocus
+                          defaultValue={
+                            activeCell?.initialValue ??
+                            String(cell.getValue() ?? "")
+                          }
+                          onClick={() => handleCellClick(rowIndex, colIndex)}
+                          onDoubleClick={() =>
+                            handleCellDoubleClick(rowIndex, colIndex)
+                          }
+                          onBlur={() => exitEditing()}
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape") {
+                              e.preventDefault();
+                              exitEditing();
+                            }
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              exitEditing(1, 0);
+                            }
+                            if (e.key === "Tab") {
+                              e.preventDefault();
+                              e.shiftKey
+                                ? exitEditing(0, -1)
+                                : exitEditing(0, 1);
+                            }
+                          }}
+                          className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
+                        />
+                      ) : (
+                        <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </div>
+                      )}
                     </TableCell>
                   );
                 })}

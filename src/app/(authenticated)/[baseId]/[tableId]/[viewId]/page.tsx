@@ -20,4 +20,5 @@ export default function Page() {
   ];
 
   return <Spreadsheet columns={columns} data={payments} />;
+  // return <div>Hello</div>
 }
