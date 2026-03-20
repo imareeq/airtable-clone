@@ -1,7 +1,11 @@
-import { type PrismaClient } from "../../generated/prisma";
+import type { DBClient } from "~/server/lib/db";
+import { ViewService } from "./view-service";
+import { ColumnService } from "./column-service";
+import { DEFAULT_COLUMNS, generateFakeRows } from "~/server/lib/fake-data";
+import { ColumnType } from "generated/prisma";
 
 export const TableService = {
-  async getByBaseId(db: PrismaClient, baseId: string) {
+  async getByBaseId(db: DBClient, baseId: string) {
     return db.table.findMany({
       where: { baseId },
       orderBy: { orderIndex: "asc" },
@@ -14,24 +18,29 @@ export const TableService = {
     });
   },
 
-  async create(db: PrismaClient, baseId: string, name: string) {
-    return db.table.create({
+  async create(db: DBClient, baseId: string, name: string) {
+    const table = await db.table.create({
       data: {
         name,
         baseId,
-        views: {
-          create: {
-            name: "Grid view",
-          },
-        },
-      },
-      include: {
-        views: true,
       },
     });
+
+    await ViewService.create(db, table.id, "Grid View");
+
+    const columns = await ColumnService.createMany(
+      db,
+      table.id,
+      DEFAULT_COLUMNS,
+    );
+
+    await TableService.createSpreadsheet(db, table.id, columns);
+    await TableService.seedTableWithFakeData(db, table.id, columns);
+
+    return table;
   },
 
-  async update(db: PrismaClient, tableId: string, name?: string) {
+  async update(db: DBClient, tableId: string, name?: string) {
     return db.table.update({
       where: { id: tableId },
       data: {
@@ -40,9 +49,51 @@ export const TableService = {
     });
   },
 
-  async delete(db: PrismaClient, tableId: string) {
+  async delete(db: DBClient, tableId: string) {
+    await db.$executeRawUnsafe(`DROP TABLE IF EXISTS "spreadsheet_${tableId}"`);
     return db.table.delete({
       where: { id: tableId },
     });
+  },
+
+  async createSpreadsheet(
+    db: DBClient,
+    tableId: string,
+    columns: { id: string; type: ColumnType }[],
+  ) {
+    const tableName = `spreadsheet_${tableId}`;
+
+    const columnDefs = [
+      `"id" TEXT PRIMARY KEY`,
+      `"order_index" INTEGER NOT NULL DEFAULT 0`,
+      ...columns.map((col) => `"${col.id}" TEXT`),
+    ].join(", ");
+
+    await db.$executeRawUnsafe(`CREATE TABLE "${tableName}" (${columnDefs})`);
+  },
+
+  async seedTableWithFakeData(
+    db: DBClient,
+    tableId: string,
+    columns: { id: string; name: string; type: ColumnType }[],
+  ) {
+    const tableName = `spreadsheet_${tableId}`;
+
+    const colNames = [
+      `"id"`,
+      `"order_index"`,
+      ...columns.map((c) => `"${c.id}"`),
+    ].join(", ");
+
+    const rows = generateFakeRows(columns, 10);
+
+    for (const row of rows) {
+      const values = [row.id, row.orderIndex, ...row.values];
+      const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
+      await db.$executeRawUnsafe(
+        `INSERT INTO "${tableName}" (${colNames}) VALUES (${placeholders})`,
+        ...values,
+      );
+    }
   },
 };

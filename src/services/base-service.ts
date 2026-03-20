@@ -1,7 +1,9 @@
-import { type PrismaClient, BaseColor, Prisma } from "../../generated/prisma";
+import type { DBClient } from "~/server/lib/db";
+import { BaseColor } from "../../generated/prisma";
+import { TableService } from "./table-service";
 
 export const BaseService = {
-  async getAll(db: PrismaClient, userId: string) {
+  async getAll(db: DBClient, userId: string) {
     return db.base.findMany({
       where: { ownerId: userId },
       include: {
@@ -21,38 +23,25 @@ export const BaseService = {
   },
 
   async create(
-    db: PrismaClient,
+    db: DBClient,
     userId: string,
     data: { name: string; color?: BaseColor },
   ) {
-    return db.base.create({
+    const base = await db.base.create({
       data: {
         name: data.name,
         color: data.color ?? BaseColor.BLUE,
         ownerId: userId,
-        tables: {
-          create: {
-            name: "Table 1",
-            views: {
-              create: {
-                name: "Grid view",
-              },
-            },
-          },
-        },
-      },
-      include: {
-        tables: {
-          include: {
-            views: true,
-          },
-        },
       },
     });
+
+    await TableService.create(db, base.id, "Table 1");
+
+    return base;
   },
 
   async update(
-    db: PrismaClient,
+    db: DBClient,
     baseId: string,
     data: { name?: string; color?: BaseColor },
   ) {
@@ -65,7 +54,7 @@ export const BaseService = {
     });
   },
 
-  async delete(db: PrismaClient, baseId: string) {
+  async delete(db: DBClient, baseId: string) {
     return db.base.delete({
       where: { id: baseId },
     });

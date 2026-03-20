@@ -18,9 +18,7 @@ export default function CreateBaseButton() {
   const createBase = api.base.create.useMutation({
     onSuccess: async (newBase) => {
       await utils.base.getAll.invalidate();
-      const firstTable = newBase.tables[0]!;
-      const firstView = firstTable.views[0]!;
-      router.push(`/${newBase.id}/${firstTable.id}/${firstView.id}`);
+      router.push(`/${newBase.id}`);
     },
     onError: (error) => toast.error(`Failed to create base: ${error.message}`),
   });
