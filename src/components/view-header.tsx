@@ -21,6 +21,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
+import { useSidebar } from "./ui/sidebar";
+import { useRef } from "react";
 
 const toolbarItems = [
   { icon: <EyeSlashIcon className="size-4" />, label: "Hide fields" },
@@ -34,6 +36,7 @@ const toolbarItems = [
 ];
 
 export default function ViewHeader() {
+  const { toggleSidebar } = useSidebar();
   return (
     <div className="bg-background border-border flex h-12 w-full flex-row items-center justify-between border-b px-2">
       <div className="flex items-center gap-0.5">
@@ -41,6 +44,7 @@ export default function ViewHeader() {
           variant="ghost"
           size="sm"
           className="text-muted-foreground hover:text-foreground h-7 px-1.5"
+          onClick={toggleSidebar}
         >
           <ListIcon className="size-4 text-black/75" />
         </Button>
@@ -84,5 +88,11 @@ export default function ViewHeader() {
         ))}
       </div>
     </div>
+  );
+}
+
+export function ViewHeaderSkeletion() {
+  return (
+    <div className="bg-background border-border flex h-12 w-full flex-row items-center justify-between border-b px-2"></div>
   );
 }

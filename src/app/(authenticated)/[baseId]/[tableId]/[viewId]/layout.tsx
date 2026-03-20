@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import ViewHeader from "~/components/view-header";
+import { ViewSidebar } from "~/components/view-sidebar";
 import { ViewProvider } from "~/contexts/view-context";
 import { api } from "~/trpc/server";
 
@@ -17,10 +18,14 @@ export default async function ViewLayout({
   return (
     <ViewProvider view={view}>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <SidebarProvider className="flex flex-col overflow-hidden">
+        <SidebarProvider className="relative flex flex-col overflow-hidden">
           <ViewHeader />
           <div className="flex flex-1 overflow-hidden">
-            {/* Sidebar here */}
+            <ViewSidebar
+              disableHoverExpand
+              className="relative inset-y-auto h-full"
+              collapsible="offcanvas"
+            />
             <SidebarInset className="overflow-auto">{children}</SidebarInset>
           </div>
         </SidebarProvider>

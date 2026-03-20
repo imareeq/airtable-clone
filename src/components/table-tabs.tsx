@@ -88,7 +88,7 @@ export function TableTabs({
         variant="ghost"
         disabled={createTable.isPending}
         className={cn(
-          "z-100 flex h-8 shrink-0 items-center gap-1.5 px-3 text-[13px] opacity-75 transition-colors hover:bg-inherit hover:opacity-100 disabled:opacity-50",
+          "flex h-8 shrink-0 items-center gap-1.5 px-3 text-[13px] opacity-75 transition-colors hover:bg-inherit hover:opacity-100 disabled:opacity-50",
         )}
       >
         <PlusIcon className="size-3" />

@@ -15,7 +15,7 @@ export default async function TableLayout({
 
   return (
     <TableProvider table={table}>
-      <div className="flex h-full flex-1 flex-col overflow-hidden">
+      <div className="flex h-full flex-1 flex-col overflow-hidden bg-background">
         <TableNav />
         {children}
       </div>

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { BaseColor } from "../../generated/prisma";
 import { getBaseColorClass } from "~/lib/color-utils";
+import { useRouter } from "next/navigation";
 
 export const COLORS = [
   { id: BaseColor.PINK_LIGHT },
@@ -34,46 +35,28 @@ export const COLORS = [
 
 export default function AppearancePicker({
   baseId,
-  selectedColor,
+  selectedColor: initialColor,
 }: {
   baseId: string;
   selectedColor: BaseColor;
 }) {
   const [tab, setTab] = useState<"color" | "icon">("color");
+  const [selectedColor, setSelectedColor] = useState(initialColor);
   const utils = api.useUtils();
+  const router = useRouter();
 
   const updateBase = api.base.update.useMutation({
-    onMutate: async ({ color }) => {
-      // 1. Cancel in-flight queries to avoid overwriting our optimistic update
-      await utils.base.getById.cancel({ baseId });
-      await utils.base.getAll.cancel();
-
-      const previousBase = utils.base.getById.getData({ baseId });
-      const previousBases = utils.base.getAll.getData();
-
-      utils.base.getById.setData({ baseId }, (old) =>
-        old ? { ...old, color: color as BaseColor } : old,
-      );
-      utils.base.getAll.setData(undefined, (old) =>
-        old?.map((base) =>
-          base.id === baseId ? { ...base, color: color as BaseColor } : base,
-        ),
-      );
-
-      return { previousBase, previousBases };
+    onMutate: ({ color }) => {
+      setSelectedColor(color as BaseColor);
     },
     onError: (error, _vars, context) => {
-      if (context?.previousBase) {
-        utils.base.getById.setData({ baseId }, context.previousBase);
-      }
-      if (context?.previousBases) {
-        utils.base.getAll.setData(undefined, context.previousBases);
-      }
+      setSelectedColor(initialColor);
       toast.error(`Failed to update color: ${error.message}`);
     },
     onSettled: async () => {
       await utils.base.getById.invalidate({ baseId });
       await utils.base.getAll.invalidate();
+      router.refresh();
     },
   });
 
