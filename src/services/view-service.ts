@@ -1,7 +1,7 @@
-import { type PrismaClient } from "../../generated/prisma";
+import type { DBClient } from "~/server/lib/db";
 
 export const ViewService = {
-  async create(db: PrismaClient, tableId: string, name: string) {
+  async create(db: DBClient, tableId: string, name: string) {
     return db.view.create({
       data: {
         name,
@@ -10,13 +10,17 @@ export const ViewService = {
     });
   },
 
-  async update(db: PrismaClient, viewId: string, data: { 
-    name?: string; 
-    filterConfig?: any; 
-    sortConfig?: any; 
-    hiddenColumns?: any;
-    searchQuery?: string | null;
-  }) {
+  async update(
+    db: DBClient,
+    viewId: string,
+    data: {
+      name?: string;
+      filterConfig?: any;
+      sortConfig?: any;
+      hiddenColumns?: any;
+      searchQuery?: string | null;
+    },
+  ) {
     return db.view.update({
       where: { id: viewId },
       data: {
@@ -29,7 +33,7 @@ export const ViewService = {
     });
   },
 
-  async delete(db: PrismaClient, viewId: string) {
+  async delete(db: DBClient, viewId: string) {
     return db.view.delete({
       where: { id: viewId },
     });
