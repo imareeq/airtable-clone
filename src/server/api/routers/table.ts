@@ -12,6 +12,14 @@ export const TableRouter = createTRPCRouter({
     return ctx.table;
   }),
 
+  getRows: tableProcedure.query(async ({ ctx }) => {
+    return TableService.getRows(
+      ctx.db,
+      ctx.table.id,
+      ctx.table.columns.map((col) => col.id),
+    );
+  }),
+
   create: baseProcedure
     .input(z.object({ baseId: z.string(), name: z.string() }))
     .mutation(async ({ ctx, input }) => {

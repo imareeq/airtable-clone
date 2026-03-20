@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Checkbox } from "../ui/checkbox";
+import { Checkbox } from "./ui/checkbox";
 
 interface SpreadsheetProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -35,7 +35,7 @@ export function Spreadsheet<TData, TValue>({
   data,
 }: SpreadsheetProps<TData, TValue>) {
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
-  const tableRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
 
   const spreadsheet = useReactTable({
     data,
@@ -162,12 +162,12 @@ export function Spreadsheet<TData, TValue>({
 
   return (
     <div
-      ref={tableRef}
       onClick={() => setActiveCell(null)}
-      className="h-full w-full overflow-auto outline-none focus:outline-none"
+      className="h-full w-full overflow-auto outline-none focus:outline-none bg-muted"
     >
       <Table
-        className="w-auto outline-none focus:outline-none"
+        ref={tableRef}
+        className="w-auto outline-none focus:outline-none bg-background"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleTableKeyDown}
@@ -207,7 +207,7 @@ export function Spreadsheet<TData, TValue>({
                   <span className="group-hover/row-cell:hidden">
                     {rowIndex + 1}
                   </span>
-                  <Checkbox className="hidden size-3.5 cursor-pointer group-hover/row-cell:block" />
+                  <Checkbox className="hidden cursor-pointer group-hover/row-cell:block" />
                 </TableCell>
 
                 {row.getVisibleCells().map((cell, colIndex) => {
