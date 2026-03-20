@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import AppHeader from "~/components/app-header";
 import { AppSidebar } from "~/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
+import { BaseProvider } from "~/contexts/base-context";
 import { api } from "~/trpc/server";
 
 export async function generateMetadata({
@@ -31,19 +32,22 @@ export default async function AppLayout({
   children: ReactNode;
   params: Promise<{ baseId: string }>;
 }) {
-  const { baseId } = await params;
+  const { baseId } = await params
+  const base = await api.base.getById({ baseId })
 
   return (
-    <div className="h-screen overflow-hidden">
-      <div className="h-full [--header-height:calc(--spacing(14))]">
-        <SidebarProvider open={false}>
-          <AppSidebar collapsible="icon" />
-          <SidebarInset className="bg-muted flex h-auto w-full flex-col">
-            <AppHeader baseId={baseId} />
-            {children}
-          </SidebarInset>
-        </SidebarProvider>
+    <BaseProvider base={base}>
+      <div className="h-screen overflow-hidden">
+        <div className="h-full [--header-height:calc(--spacing(14))]">
+          <SidebarProvider open={false}>
+            <AppSidebar collapsible="icon" />
+            <SidebarInset className="bg-muted flex h-auto w-full flex-col">
+              <AppHeader />
+              {children}
+            </SidebarInset>
+          </SidebarProvider>
+        </div>
       </div>
-    </div>
-  );
+    </BaseProvider>
+  )
 }

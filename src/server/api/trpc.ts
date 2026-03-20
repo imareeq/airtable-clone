@@ -34,7 +34,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   if (!db) {
     throw new Error("Database client failed to initialize");
   }
-  
+
   return {
     db,
     session,
@@ -146,6 +146,12 @@ export const baseProcedure = protectedProcedure
   .use(async ({ ctx, input, next }) => {
     const base = await ctx.db.base.findUnique({
       where: { id: input.baseId, ownerId: ctx.session.user.id },
+      include: {
+        tables: {
+          select: { id: true, name: true },
+          orderBy: { orderIndex: "asc" },
+        },
+      },
     });
     if (!base) {
       throw new TRPCError({
@@ -168,6 +174,10 @@ export const tableProcedure = protectedProcedure
         base: {
           ownerId: ctx.session.user.id,
         },
+      },
+      include: {
+        columns: { orderBy: { orderIndex: "asc" } },
+        views: { select: { id: true, name: true } },
       },
     });
     if (!table) {
