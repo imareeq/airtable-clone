@@ -28,12 +28,7 @@ export function TableTabs({
     onSuccess: async (newTable) => {
       router.refresh();
       await utils.base.getById.invalidate({ baseId });
-      const firstViewId = newTable.views?.[0]?.id;
-      if (firstViewId) {
-        router.push(`/${baseId}/${newTable.id}/${firstViewId}`);
-      } else {
-        router.push(`/${baseId}/${newTable.id}`);
-      }
+      router.push(`/${baseId}/${newTable.id}`);
     },
   });
 
