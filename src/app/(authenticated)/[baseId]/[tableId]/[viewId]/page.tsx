@@ -1,24 +1,25 @@
 "use client";
 
-import { columns, type Payment } from "~/components/table/columns";
-import { Spreadsheet } from "~/components/table/spreadsheet";
+import type { ColumnDef } from "@tanstack/react-table";
+import { useParams } from "next/navigation";
+import { Spreadsheet } from "~/components/spreadsheet";
+import { useTable } from "~/contexts/table-context";
+import { api } from "~/trpc/react";
 
 export default function Page() {
-  const payments: Payment[] = [
-    {
-      id: "728ed52f",
-      amount: 100,
-      status: "pending",
-      email: "m@example.com",
-    },
-    {
-      id: "489e1d42",
-      amount: 125,
-      status: "processing",
-      email: "example@gmail.com",
-    },
-  ];
+  const { tableId } = useParams<{ tableId: string }>();
+  const { columns: tableColumns } = useTable();
 
-  return <Spreadsheet columns={columns} data={payments} />;
-  // return <div>Hello</div>
+  const { data: rows = [] } = api.table.getRows.useQuery({ tableId });
+
+  const columns: ColumnDef<Record<string, string>>[] = tableColumns.map(
+    (col) => ({
+      accessorKey: col.id,
+      header: col.name,
+    }),
+  );
+
+  return (
+    <Spreadsheet columns={columns} data={rows as Record<string, string>[]} />
+  );
 }

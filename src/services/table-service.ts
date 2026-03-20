@@ -5,19 +5,6 @@ import { DEFAULT_COLUMNS, generateFakeRows } from "~/server/lib/fake-data";
 import { ColumnType } from "generated/prisma";
 
 export const TableService = {
-  async getByBaseId(db: DBClient, baseId: string) {
-    return db.table.findMany({
-      where: { baseId },
-      orderBy: { orderIndex: "asc" },
-      include: {
-        views: {
-          orderBy: { createdAt: "asc" },
-          take: 1,
-        },
-      },
-    });
-  },
-
   async create(db: DBClient, baseId: string, name: string) {
     const table = await db.table.create({
       data: {
@@ -38,6 +25,18 @@ export const TableService = {
     await TableService.seedTableWithFakeData(db, table.id, columns);
 
     return table;
+  },
+
+  async getRows(db: DBClient, tableId: string, columnIds: string[]) {
+    const cols = [
+      `"id"`,
+      `"order_index"`,
+      ...columnIds.map((id) => `"${id}"`),
+    ].join(", ");
+
+    return db.$queryRawUnsafe(
+      `SELECT ${cols} FROM "spreadsheet_${tableId}" ORDER BY "order_index" ASC`,
+    );
   },
 
   async update(db: DBClient, tableId: string, name?: string) {
