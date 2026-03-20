@@ -128,7 +128,7 @@ export function DashboardSidebar({ ...props }: React.ComponentProps<typeof Sideb
             <SidebarMenuItem key={el.title}>
               <SidebarMenuButton>
                 {el.icon}
-                <span>{el.title}</span>
+                {el.title}
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
