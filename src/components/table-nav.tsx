@@ -8,7 +8,7 @@ import { getOppositeBaseColorClass, isBaseColorLight } from "~/lib/color-utils";
 import TableNavToolsDropdown from "./table-nav-tools-dropdown";
 
 export default function TableNav() {
-  const { baseId, tableId } = useParams<{ baseId: string; tableId: string }>();
+  const { tableId } = useParams<{ baseId: string; tableId: string }>();
   const base = useBase();
 
   const isDarkBackground = base?.color ? isBaseColorLight(base.color) : false;
@@ -27,7 +27,7 @@ export default function TableNav() {
       />
       <div className="relative flex items-end">
         <TableTabs
-          baseId={baseId}
+          baseId={base.id}
           activeTableId={tableId}
           isDarkBackground={isDarkBackground}
         />

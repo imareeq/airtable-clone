@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CaretDownIcon, PlusIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 import { Button } from "./ui/button";
 import { useBase } from "~/contexts/base-context";
+import TableActionsDropdown from "./table-actions-dropdown";
 
 interface TableTabsProps {
   activeTableId: string;
@@ -54,22 +55,24 @@ export function TableTabs({
         const path = `/${baseId}/${table.id}`;
 
         return (
-          <button
+          <div
             key={table.id}
-            onClick={() => router.push(path)}
-            onMouseEnter={() => router.prefetch(path)}
             className={cn(
-              "relative flex h-8 shrink-0 cursor-pointer items-center gap-1 rounded-t-sm border border-b-0 px-3 text-[13px] transition-colors first:border-l-0",
+              "relative -mb-px flex h-8 shrink-0 cursor-pointer items-center rounded-t-sm border border-b-0 text-[13px] transition-colors first:border-l-0",
               isActive
-                ? "border-border bg-background text-foreground after:bg-background after:absolute after:right-0 after:-bottom-px after:left-0 after:h-px"
-                : cn("border-transparent", inactiveTextColor),
+                ? "tab-active border-border bg-background text-foreground"
+                : cn("border-transparent pr-3", inactiveTextColor),
             )}
           >
-            <span>{table.name}</span>
-            {isActive && (
-              <CaretDownIcon className="text-muted-foreground size-3" />
-            )}
-          </button>
+            <button
+              onClick={() => router.push(path)}
+              onMouseEnter={() => router.prefetch(path)}
+              className="flex h-full cursor-pointer items-center pl-3"
+            >
+              <span>{table.name}</span>
+            </button>
+            {isActive && <TableActionsDropdown />}
+          </div>
         );
       })}
 

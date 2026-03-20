@@ -11,7 +11,7 @@ export type ViewType = "list" | "grid";
 export type FilterType = "today" | "7days" | "30days" | "anytime";
 
 export default function BaseList() {
-  const [view, setView] = useState<ViewType>("list");
+  const [view, setView] = useState<ViewType>("grid");
   const [filter, setFilter] = useState<FilterType>("anytime");
 
   const { data: bases, isLoading, error } = api.base.getAll.useQuery();

@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   createTRPCRouter,
@@ -23,6 +24,17 @@ export const TableRouter = createTRPCRouter({
     }),
 
   delete: tableProcedure.mutation(async ({ ctx, input }) => {
+    const tableCount = await ctx.db.table.count({
+      where: { baseId: ctx.table.baseId },
+    });
+
+    if (tableCount <= 1) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Cannot delete the only table in a base",
+      });
+    }
+
     return TableService.delete(ctx.db, input.tableId);
   }),
 });
