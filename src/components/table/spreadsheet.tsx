@@ -163,11 +163,15 @@ export function Spreadsheet<TData, TValue>({
   return (
     <div
       ref={tableRef}
-      tabIndex={-1}
-      onKeyDown={handleTableKeyDown}
+      onClick={() => setActiveCell(null)}
       className="h-full w-full overflow-auto outline-none focus:outline-none"
     >
-      <Table className="w-auto">
+      <Table
+        className="w-auto outline-none focus:outline-none"
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={handleTableKeyDown}
+      >
         <TableHeader className="bg-background sticky top-0 z-10">
           {spreadsheet.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="hover:bg-muted h-8">
