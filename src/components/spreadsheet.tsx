@@ -18,13 +18,15 @@ import {
 } from "~/components/ui/table";
 import { Checkbox } from "./ui/checkbox";
 import { Button } from "./ui/button";
-import { PlusIcon } from "@phosphor-icons/react";
+import { HashIcon, PlusIcon, TextAaIcon } from "@phosphor-icons/react";
 import { api } from "~/trpc/react";
 import { CreateColumnPopover } from "./create-column-popover";
 import { toast } from "sonner";
 import { useTable } from "~/contexts/table-context";
 import { useRouter } from "next/navigation";
 import SpreadsheetContextMenu from "./spreadsheet-context-menu";
+import { ColumnType } from "generated/prisma";
+import * as z from "zod";
 
 interface SpreadsheetProps<TData extends { id: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -36,6 +38,11 @@ type ActiveCell = {
   colIndex: number;
   mode: "selected" | "editing";
   initialValue?: string;
+};
+
+const columnTypeIcon = {
+  [ColumnType.TEXT]: <TextAaIcon className="text-foreground size-4" />,
+  [ColumnType.NUMBER]: <HashIcon className="text-foreground size-4" />,
 };
 
 export function Spreadsheet<TData extends { id: string }, TValue>({
@@ -114,8 +121,25 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
         default:
           if (e.key.length === 1 && !e.metaKey && !e.ctrlKey) {
             e.preventDefault();
+
+            const activeColType = activeCell
+              ? table.columns[activeCell.colIndex]?.type
+              : undefined;
+
+            if (activeColType === ColumnType.NUMBER) {
+              const numberSchema = z.string().regex(/^-?\d*\.?\d*$/);
+              const currentValue = activeCell?.initialValue ?? "";
+              const nextValue = currentValue + e.key;
+              if (!numberSchema.safeParse(nextValue).success) return;
+            }
+
             setActiveCell((p) =>
               p ? { ...p, mode: "editing", initialValue: e.key } : null,
+            );
+          } else if (e.key === "Backspace" || e.key === "Delete") {
+            e.preventDefault();
+            setActiveCell((p) =>
+              p ? { ...p, mode: "editing", initialValue: "" } : null,
             );
           }
       }
@@ -271,14 +295,27 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className="hover:bg-muted text-muted-foreground w-44 border-r px-2 text-[12px] font-normal"
+                      className="hover:bg-muted text-foreground w-44 border-r px-2 text-[12px] font-normal"
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
+                      {header.isPlaceholder ? null : (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">
+                            {
+                              columnTypeIcon[
+                                (
+                                  header.column.columnDef.meta as {
+                                    type: ColumnType;
+                                  }
+                                )?.type
+                              ]
+                            }
+                          </span>
+                          {flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
                           )}
+                        </div>
+                      )}
                     </TableHead>
                   ))}
                 </TableRow>

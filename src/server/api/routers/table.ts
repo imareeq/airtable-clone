@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { ColumnType } from "generated/prisma";
 import { z } from "zod";
 import {
   createTRPCRouter,
@@ -59,11 +60,22 @@ export const TableRouter = createTRPCRouter({
       const validColumn = ctx.table.columns.find(
         (c) => c.id === input.columnId,
       );
+
       if (!validColumn) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Column not found",
         });
+      }
+
+      if (validColumn.type === ColumnType.NUMBER && input.value !== "") {
+        const parsed = z.coerce.number().safeParse(input.value);
+        if (!parsed.success) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Value must be a number",
+          });
+        }
       }
 
       return TableService.updateCell(

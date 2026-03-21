@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { ColumnType } from "generated/prisma";
 import { useParams } from "next/navigation";
 import { Spreadsheet } from "~/components/spreadsheet";
 import { useTable } from "~/contexts/table-context";
@@ -16,6 +17,15 @@ export default function Page() {
   const columns: ColumnDef<SpreadsheetRow>[] = tableColumns.map((col) => ({
     accessorKey: col.id,
     header: col.name,
+    meta: { type: col.type },
+    cell: ({ getValue }) => {
+      const value = getValue<string>();
+      if (col.type === ColumnType.NUMBER && value !== "" && value != null) {
+        const num = Number(value);
+        return isNaN(num) ? value : num.toLocaleString();
+      }
+      return value;
+    },
   }));
 
   return <Spreadsheet columns={columns} data={rows as SpreadsheetRow[]} />;
