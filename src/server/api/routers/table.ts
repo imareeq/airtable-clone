@@ -28,6 +28,12 @@ export const TableRouter = createTRPCRouter({
     );
   }),
 
+  deleteRow: tableProcedure
+    .input(z.object({ tableId: z.string(), rowId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return TableService.deleteRow(ctx.db, ctx.table.id, input.rowId);
+    }),
+
   create: baseProcedure
     .input(z.object({ baseId: z.string(), name: z.string() }))
     .mutation(async ({ ctx, input }) => {
