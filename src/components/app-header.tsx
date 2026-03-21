@@ -22,8 +22,6 @@ export default function AppHeader() {
 
   const isMobile = useIsMobile();
 
-  if (!base) return <div>404</div>;
-
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
       <div className="flex h-(--header-height) w-full items-center justify-between gap-3.5 px-1.5">
