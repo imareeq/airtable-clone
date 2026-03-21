@@ -17,19 +17,17 @@ export default async function ViewLayout({
 
   return (
     <ViewProvider view={view}>
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <SidebarProvider className="relative flex flex-col overflow-hidden">
-          <ViewHeader />
-          <div className="flex flex-1 overflow-hidden">
-            <ViewSidebar
-              disableHoverExpand
-              className="relative inset-y-auto h-full"
-              collapsible="offcanvas"
-            />
-            <SidebarInset className="overflow-auto">{children}</SidebarInset>
-          </div>
-        </SidebarProvider>
-      </div>
+      <SidebarProvider className="relative flex flex-col overflow-hidden">
+        <ViewHeader />
+        <div className="relative flex flex-1 overflow-hidden">
+          <ViewSidebar
+            disableHoverExpand
+            className="absolute inset-y-0 h-full"
+            collapsible="offcanvas"
+          />
+          <SidebarInset className="overflow-auto">{children}</SidebarInset>
+        </div>
+      </SidebarProvider>
     </ViewProvider>
   );
 }
