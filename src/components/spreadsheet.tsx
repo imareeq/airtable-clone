@@ -113,6 +113,7 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
           break;
         default:
           if (e.key.length === 1 && !e.metaKey && !e.ctrlKey) {
+            e.preventDefault();
             setActiveCell((p) =>
               p ? { ...p, mode: "editing", initialValue: e.key } : null,
             );
@@ -193,6 +194,34 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
     },
   });
 
+  const updateCell = api.table.updateCell.useMutation({
+    onMutate: async ({ rowId, columnId, value }) => {
+      await utils.table.getRows.cancel({ tableId: table.id });
+
+      const previousRows = utils.table.getRows.getData({ tableId: table.id });
+
+      utils.table.getRows.setData({ tableId: table.id }, (old) =>
+        old?.map((row) =>
+          row.id === rowId ? { ...row, [columnId]: value } : row,
+        ),
+      );
+
+      return { previousRows };
+    },
+    onError: (error, _vars, context) => {
+      if (context?.previousRows) {
+        utils.table.getRows.setData(
+          { tableId: table.id },
+          context.previousRows,
+        );
+      }
+      toast.error(`Failed to update cell: ${error.message}`);
+    },
+    onSettled: () => {
+      void utils.table.getRows.invalidate({ tableId: table.id });
+    },
+  });
+
   return (
     <div
       onClick={() => setActiveCell(null)}
@@ -257,134 +286,145 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
             </TableHeader>
 
             <TableBody>
-              {rows.length ? (
-                rows.map((row, rowIndex) => (
-                  <TableRow
-                    key={row.id}
-                    className={cn(
-                      "hover:bg-muted h-8",
-                      checkedRows.has(row.original.id) && "bg-muted",
-                    )}
-                    data-state={row.getIsSelected() && "selected"}
-                    onContextMenu={() => setContextRowIndex(rowIndex)}
-                  >
-                    <TableCell className="text-muted-foreground border-border group/row-cell w-21! border-l-0 text-center text-xs">
-                      {!checkedRows.has(row.original.id) && (
-                        <span className="flex w-full items-center justify-center pr-7.5 group-hover/row-cell:hidden">
-                          {rowIndex + 1}
-                        </span>
+              {rows.length
+                ? rows.map((row, rowIndex) => (
+                    <TableRow
+                      key={row.id}
+                      className={cn(
+                        "hover:bg-muted h-8",
+                        checkedRows.has(row.original.id) && "bg-muted",
                       )}
-                      <div
-                        className={cn(
-                          "w-full items-center justify-center pr-7.5",
-                          checkedRows.has(row.original.id)
-                            ? "flex"
-                            : "hidden group-hover/row-cell:flex",
+                      data-state={row.getIsSelected() && "selected"}
+                      onContextMenu={() => setContextRowIndex(rowIndex)}
+                    >
+                      <TableCell className="text-muted-foreground border-border group/row-cell w-21! border-l-0 text-center text-xs">
+                        {!checkedRows.has(row.original.id) && (
+                          <span className="flex w-full items-center justify-center pr-7.5 group-hover/row-cell:hidden">
+                            {rowIndex + 1}
+                          </span>
                         )}
-                      >
-                        <Checkbox
-                          checked={checkedRows.has(row.original.id)}
-                          className="cursor-pointer"
-                          onCheckedChange={(checked) => {
-                            setCheckedRows((prev) => {
-                              const next = new Set(prev);
-                              if (checked) next.add(row.original.id);
-                              else next.delete(row.original.id);
-                              return next;
-                            });
-                          }}
-                        />
-                      </div>
-                    </TableCell>
-
-                    {row.getVisibleCells().map((cell, colIndex) => {
-                      const isSelected =
-                        activeCell?.rowIndex === rowIndex &&
-                        activeCell?.colIndex === colIndex;
-                      const isEditing =
-                        isSelected && activeCell?.mode === "editing";
-
-                      return (
-                        <TableCell
-                          key={cell.id}
+                        <div
                           className={cn(
-                            "border-border relative w-44 border-r p-0",
-                            isSelected && "z-10",
+                            "w-full items-center justify-center pr-7.5",
+                            checkedRows.has(row.original.id)
+                              ? "flex"
+                              : "hidden group-hover/row-cell:flex",
                           )}
-                          onClick={() => {
-                            tableRef.current?.focus({ preventScroll: true });
-                            setActiveCell({
-                              rowIndex,
-                              colIndex,
-                              mode: "selected",
-                            });
-                          }}
-                          onDoubleClick={() =>
-                            setActiveCell({
-                              rowIndex,
-                              colIndex,
-                              mode: "editing",
-                            })
-                          }
                         >
-                          {isSelected && (
-                            <div
-                              className="pointer-events-none absolute inset-0 z-30"
-                              style={{
-                                boxShadow: [
-                                  colIndex !== 0 &&
-                                    "inset 2px 0 0 0 var(--color-primary)",
-                                  rowIndex !== 0 &&
-                                    "inset 0 2px 0 0 var(--color-primary)",
-                                  "inset -2px 0 0 0 var(--color-primary)",
-                                  "inset 0 -2px 0 0 var(--color-primary)",
-                                ]
-                                  .filter(Boolean)
-                                  .join(", "),
-                              }}
-                            />
-                          )}
+                          <Checkbox
+                            checked={checkedRows.has(row.original.id)}
+                            className="cursor-pointer"
+                            onCheckedChange={(checked) => {
+                              setCheckedRows((prev) => {
+                                const next = new Set(prev);
+                                if (checked) next.add(row.original.id);
+                                else next.delete(row.original.id);
+                                return next;
+                              });
+                            }}
+                          />
+                        </div>
+                      </TableCell>
 
-                          {isEditing ? (
-                            <input
-                              autoFocus
-                              defaultValue={
-                                activeCell?.initialValue ??
-                                String(cell.getValue() ?? "")
-                              }
-                              onClick={() =>
-                                handleCellClick(rowIndex, colIndex)
-                              }
-                              onDoubleClick={() =>
-                                handleCellDoubleClick(rowIndex, colIndex)
-                              }
-                              onBlur={() => handleCellBlur()}
-                              onKeyDown={(e) => handleCellKeyDown(e)}
-                              className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
-                            />
-                          ) : (
-                            <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </div>
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length + 2}
-                    className="text-muted-foreground h-24 text-center text-[13px]"
-                  >
-                    No results
-                  </TableCell>
-                </TableRow>
-              )}
+                      {row.getVisibleCells().map((cell, colIndex) => {
+                        const isSelected =
+                          activeCell?.rowIndex === rowIndex &&
+                          activeCell?.colIndex === colIndex;
+                        const isEditing =
+                          isSelected && activeCell?.mode === "editing";
+
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            className={cn(
+                              "border-border relative w-44 border-r p-0",
+                              isSelected && "z-10",
+                            )}
+                            onClick={() => {
+                              tableRef.current?.focus({ preventScroll: true });
+                              setActiveCell({
+                                rowIndex,
+                                colIndex,
+                                mode: "selected",
+                              });
+                            }}
+                            onDoubleClick={() =>
+                              setActiveCell({
+                                rowIndex,
+                                colIndex,
+                                mode: "editing",
+                              })
+                            }
+                          >
+                            {isSelected && (
+                              <div
+                                className="pointer-events-none absolute inset-0 z-30"
+                                style={{
+                                  boxShadow: [
+                                    colIndex !== 0 &&
+                                      "inset 2px 0 0 0 var(--color-primary)",
+                                    rowIndex !== 0 &&
+                                      "inset 0 2px 0 0 var(--color-primary)",
+                                    "inset -2px 0 0 0 var(--color-primary)",
+                                    "inset 0 -2px 0 0 var(--color-primary)",
+                                  ]
+                                    .filter(Boolean)
+                                    .join(", "),
+                                }}
+                              />
+                            )}
+
+                            {isEditing ? (
+                              <input
+                                autoFocus
+                                defaultValue={
+                                  activeCell?.initialValue ??
+                                  String(cell.getValue() ?? "")
+                                }
+                                onClick={() =>
+                                  handleCellClick(rowIndex, colIndex)
+                                }
+                                onDoubleClick={() =>
+                                  handleCellDoubleClick(rowIndex, colIndex)
+                                }
+                                onBlur={(e) => {
+                                  updateCell.mutate({
+                                    tableId: table.id,
+                                    rowId: row.original.id,
+                                    columnId: cell.column.id,
+                                    value: e.target.value,
+                                  });
+
+                                  handleCellBlur();
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === "Tab") {
+                                    updateCell.mutate({
+                                      tableId: table.id,
+                                      rowId: row.original.id,
+                                      columnId: cell.column.id,
+                                      value: (e.target as HTMLInputElement)
+                                        .value,
+                                    });
+                                  }
+                                  handleCellKeyDown(e);
+                                }}
+                                className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
+                              />
+                            ) : (
+                              <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext(),
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))
+                : null}
               <TableRow
                 className="hover:bg-transparent"
                 onContextMenu={(e) => e.stopPropagation()}

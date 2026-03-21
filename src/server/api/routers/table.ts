@@ -7,6 +7,8 @@ import {
 } from "~/server/api/trpc";
 import { TableService } from "~/services/table-service";
 
+export type SpreadsheetRow = { id: string } & Record<string, string>;
+
 export const TableRouter = createTRPCRouter({
   getById: tableProcedure.query(async ({ ctx }) => {
     return ctx.table;
@@ -42,6 +44,35 @@ export const TableRouter = createTRPCRouter({
     .input(z.object({ tableId: z.string(), name: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       return TableService.update(ctx.db, input.tableId, input.name);
+    }),
+
+  updateCell: tableProcedure
+    .input(
+      z.object({
+        tableId: z.string(),
+        rowId: z.string(),
+        columnId: z.string(),
+        value: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const validColumn = ctx.table.columns.find(
+        (c) => c.id === input.columnId,
+      );
+      if (!validColumn) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Column not found",
+        });
+      }
+
+      return TableService.updateCell(
+        ctx.db,
+        ctx.table.id,
+        input.rowId,
+        input.columnId,
+        input.value,
+      );
     }),
 
   delete: tableProcedure.mutation(async ({ ctx, input }) => {

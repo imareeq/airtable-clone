@@ -4,6 +4,7 @@ import { ColumnService } from "./column-service";
 import { DEFAULT_COLUMNS, generateFakeRows } from "~/server/lib/fake-data";
 import { ColumnType } from "generated/prisma";
 import { nanoid } from "nanoid";
+import type { SpreadsheetRow } from "~/server/api/routers/table";
 
 export const TableService = {
   async create(db: DBClient, baseId: string, name: string) {
@@ -35,7 +36,7 @@ export const TableService = {
       ...columnIds.map((id) => `"${id}"`),
     ].join(", ");
 
-    return db.$queryRawUnsafe(
+    return db.$queryRawUnsafe<SpreadsheetRow[]>(
       `SELECT ${cols} FROM "spreadsheet_${tableId}" ORDER BY "order_index" ASC`,
     );
   },
@@ -63,6 +64,20 @@ export const TableService = {
         name,
       },
     });
+  },
+
+  async updateCell(
+    db: DBClient,
+    tableId: string,
+    rowId: string,
+    columnId: string,
+    value: string,
+  ) {
+    await db.$executeRawUnsafe(
+      `UPDATE "spreadsheet_${tableId}" SET "${columnId}" = $1 WHERE "id" = $2`,
+      value,
+      rowId,
+    );
   },
 
   async delete(db: DBClient, tableId: string) {
