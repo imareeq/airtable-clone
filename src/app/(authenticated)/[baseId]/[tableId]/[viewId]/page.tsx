@@ -3,6 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { ColumnType } from "generated/prisma";
 import { useParams } from "next/navigation";
+import { ColumnHeader } from "~/components/column-header";
 import { Spreadsheet } from "~/components/spreadsheet";
 import { useTable } from "~/contexts/table-context";
 import type { SpreadsheetRow } from "~/server/api/routers/table";
@@ -16,8 +17,8 @@ export default function Page() {
 
   const columns: ColumnDef<SpreadsheetRow>[] = tableColumns.map((col) => ({
     accessorKey: col.id,
-    header: col.name,
     meta: { type: col.type },
+    header: () => <ColumnHeader column={col} />,
     cell: ({ getValue }) => {
       const value = getValue<string>();
       if (col.type === ColumnType.NUMBER && value !== "" && value != null) {
