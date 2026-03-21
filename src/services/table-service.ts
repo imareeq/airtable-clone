@@ -40,23 +40,13 @@ export const TableService = {
     );
   },
 
-  async createRow(db: DBClient, tableId: string, columnIds: string[]) {
-    const existingCount = await db.$queryRawUnsafe<[{ count: string }]>(
-      `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}"`,
-    );
-    const orderIndex = parseInt(existingCount[0]!.count);
-
+  async createRow(db: DBClient, tableId: string) {
     const id = nanoid(17);
-    const cols = [`"id"`, `"order_index"`].join(", ");
-    const placeholders = [`$1`, `$2`].join(", ");
-
     await db.$executeRawUnsafe(
-      `INSERT INTO "spreadsheet_${tableId}" (${cols}) VALUES (${placeholders})`,
+      `INSERT INTO "spreadsheet_${tableId}" ("id") VALUES ($1)`,
       id,
-      orderIndex,
     );
-
-    return { id, order_index: orderIndex };
+    return { id };
   },
 
   async deleteRow(db: DBClient, tableId: string, rowId: string) {
@@ -91,7 +81,7 @@ export const TableService = {
 
     const columnDefs = [
       `"id" TEXT PRIMARY KEY`,
-      `"order_index" INTEGER NOT NULL DEFAULT 0`,
+      `"order_index" BIGINT GENERATED ALWAYS AS IDENTITY`,
       ...columns.map((col) => `"${col.id}" TEXT`),
     ].join(", ");
 
@@ -105,16 +95,11 @@ export const TableService = {
   ) {
     const tableName = `spreadsheet_${tableId}`;
 
-    const colNames = [
-      `"id"`,
-      `"order_index"`,
-      ...columns.map((c) => `"${c.id}"`),
-    ].join(", ");
-
+    const colNames = [`"id"`, ...columns.map((c) => `"${c.id}"`)].join(", ");
     const rows = generateFakeRows(columns, 10);
 
     for (const row of rows) {
-      const values = [row.id, row.orderIndex, ...row.values];
+      const values = [row.id, ...row.values];
       const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
       await db.$executeRawUnsafe(
         `INSERT INTO "${tableName}" (${colNames}) VALUES (${placeholders})`,

@@ -44,6 +44,7 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
 }: SpreadsheetProps<TData, TValue>) {
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
   const [contextRowIndex, setContextRowIndex] = useState<number | null>(null);
+  const [checkedRows, setCheckedRows] = useState<Set<string>>(new Set());
   const tableRef = useRef<HTMLTableElement>(null);
   const headerRowRef = useRef<HTMLTableRowElement>(null);
   const utils = api.useUtils();
@@ -221,7 +222,22 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
                   onContextMenu={(e) => e.stopPropagation()}
                 >
                   <TableHead className="border-border w-21! border-r text-center text-[12px] font-normal">
-                    <Checkbox />
+                    <div className="flex w-full items-center justify-center pr-7.5">
+                      <Checkbox
+                        checked={
+                          checkedRows.size === rows.length && rows.length > 0
+                        }
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setCheckedRows(
+                              new Set(rows.map((row) => row.original.id)),
+                            );
+                          } else {
+                            setCheckedRows(new Set());
+                          }
+                        }}
+                      />
+                    </div>
                   </TableHead>
                   {headerGroup.headers.map((header) => (
                     <TableHead
@@ -245,15 +261,40 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
                 rows.map((row, rowIndex) => (
                   <TableRow
                     key={row.id}
-                    className="hover:bg-muted h-8"
+                    className={cn(
+                      "hover:bg-muted h-8",
+                      checkedRows.has(row.original.id) && "bg-muted",
+                    )}
                     data-state={row.getIsSelected() && "selected"}
                     onContextMenu={() => setContextRowIndex(rowIndex)}
                   >
-                    <TableCell className="text-muted-foreground border-border group/row-cell w-21! border-l-0 px-2 text-xs">
-                      <span className="group-hover/row-cell:hidden">
-                        {rowIndex + 1}
-                      </span>
-                      <Checkbox className="hidden cursor-pointer group-hover/row-cell:block" />
+                    <TableCell className="text-muted-foreground border-border group/row-cell w-21! border-l-0 text-center text-xs">
+                      {!checkedRows.has(row.original.id) && (
+                        <span className="flex w-full items-center justify-center pr-7.5 group-hover/row-cell:hidden">
+                          {rowIndex + 1}
+                        </span>
+                      )}
+                      <div
+                        className={cn(
+                          "w-full items-center justify-center pr-7.5",
+                          checkedRows.has(row.original.id)
+                            ? "flex"
+                            : "hidden group-hover/row-cell:flex",
+                        )}
+                      >
+                        <Checkbox
+                          checked={checkedRows.has(row.original.id)}
+                          className="cursor-pointer"
+                          onCheckedChange={(checked) => {
+                            setCheckedRows((prev) => {
+                              const next = new Set(prev);
+                              if (checked) next.add(row.original.id);
+                              else next.delete(row.original.id);
+                              return next;
+                            });
+                          }}
+                        />
+                      </div>
                     </TableCell>
 
                     {row.getVisibleCells().map((cell, colIndex) => {
