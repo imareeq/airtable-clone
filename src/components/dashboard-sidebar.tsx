@@ -103,7 +103,9 @@ const data = {
   ],
 };
 
-export function DashboardSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function DashboardSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   const { state } = useSidebar();
 
   return (
@@ -126,9 +128,14 @@ export function DashboardSidebar({ ...props }: React.ComponentProps<typeof Sideb
         <SidebarMenu>
           {data.footer.map((el) => (
             <SidebarMenuItem key={el.title}>
-              <SidebarMenuButton>
+              <SidebarMenuButton
+                tooltip={el.title}
+                className="group-data-[state=collapsed]:justify-center"
+              >
                 {el.icon}
-                {el.title}
+                {state !== "collapsed" && (
+                  <span className="truncate">{el.title}</span>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
