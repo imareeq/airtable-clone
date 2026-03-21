@@ -21,6 +21,9 @@ import { Button } from "./ui/button";
 import { PlusIcon } from "@phosphor-icons/react";
 import { api } from "~/trpc/react";
 import { CreateColumnPopover } from "./create-column-popover";
+import { toast } from "sonner";
+import { useTable } from "~/contexts/table-context";
+import { useRouter } from "next/navigation";
 
 interface SpreadsheetProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -41,6 +44,9 @@ export function Spreadsheet<TData, TValue>({
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const headerRowRef = useRef<HTMLTableRowElement>(null);
+  const utils = api.useUtils();
+  const router = useRouter();
+  const table = useTable();
 
   const spreadsheet = useReactTable({
     data,
@@ -164,6 +170,16 @@ export function Spreadsheet<TData, TValue>({
     },
     [],
   );
+
+  const createRow = api.table.createRow.useMutation({
+    onSuccess: () => {
+      void utils.table.getRows.invalidate({ tableId: table.id });
+      router.refresh();
+    },
+    onError: (error) => {
+      toast.error(`Failed to create row: ${error.message}`);
+    },
+  });
 
   return (
     <div
@@ -310,9 +326,7 @@ export function Spreadsheet<TData, TValue>({
                 <Button
                   variant="ghost"
                   className="hover:bg-muted hover:text-foreground flex h-8 w-full items-center justify-start rounded-none border-r border-b px-2 font-normal text-black/75"
-                  onClick={() => {
-                    /* TODO: call create a row function here*/
-                  }}
+                  onClick={() => createRow.mutate({ tableId: table.id })}
                 >
                   <PlusIcon className="size-4" />
                 </Button>
