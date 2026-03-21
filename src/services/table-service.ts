@@ -59,6 +59,13 @@ export const TableService = {
     return { id, order_index: orderIndex };
   },
 
+  async deleteRow(db: DBClient, tableId: string, rowId: string) {
+    await db.$executeRawUnsafe(
+      `DELETE FROM "spreadsheet_${tableId}" WHERE "id" = $1`,
+      rowId,
+    );
+  },
+
   async update(db: DBClient, tableId: string, name?: string) {
     return db.table.update({
       where: { id: tableId },
