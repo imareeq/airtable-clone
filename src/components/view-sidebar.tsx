@@ -33,7 +33,7 @@ export function ViewSidebar({
 
   return (
     <Sidebar
-      className="bg-background top-12 h-[calc(100svh-var(--header-height))]! duration-200"
+      className="bg-background duration-200"
       {...props}
     >
       <SidebarContent className="gap-2 p-2">
