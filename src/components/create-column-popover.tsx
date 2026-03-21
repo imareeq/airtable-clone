@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Separator } from "~/components/ui/separator";
 import { ColumnType } from "generated/prisma";
 import { useTable } from "~/contexts/table-context";
 import { api } from "~/trpc/react";
