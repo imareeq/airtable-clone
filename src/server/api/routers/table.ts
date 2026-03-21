@@ -21,11 +21,7 @@ export const TableRouter = createTRPCRouter({
   }),
 
   createRow: tableProcedure.mutation(async ({ ctx }) => {
-    return TableService.createRow(
-      ctx.db,
-      ctx.table.id,
-      ctx.table.columns.map((c) => c.id),
-    );
+    return TableService.createRow(ctx.db, ctx.table.id);
   }),
 
   deleteRow: tableProcedure
