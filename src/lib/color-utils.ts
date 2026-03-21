@@ -1,7 +1,7 @@
 import { BaseColor } from "../../generated/prisma";
 
 export const BASE_COLOR_MAP: Record<BaseColor, string> = {
-  [BaseColor.PINK_LIGHT]: "bg-appearance-pink-light",
+  [BaseColor.PINK_LIGHT]: "bg-appearance-pink-light/50",
   [BaseColor.PEACH_LIGHT]: "bg-appearance-peach-light",
   [BaseColor.YELLOW_LIGHT]: "bg-appearance-yellow-light",
   [BaseColor.GREEN_LIGHT]: "bg-appearance-green-light",
@@ -23,27 +23,27 @@ export const BASE_COLOR_MAP: Record<BaseColor, string> = {
   [BaseColor.GRAY]: "bg-appearance-gray",
 };
 
-export const OPPOSITE_BASE_COLOR_MAP: Record<BaseColor, string> = {
-  [BaseColor.PINK_LIGHT]: "bg-appearance-red",
-  [BaseColor.PEACH_LIGHT]: "bg-appearance-orange",
-  [BaseColor.YELLOW_LIGHT]: "bg-appearance-yellow",
-  [BaseColor.GREEN_LIGHT]: "bg-appearance-green",
-  [BaseColor.TEAL_LIGHT]: "bg-appearance-teal",
-  [BaseColor.SKY_LIGHT]: "bg-appearance-cyan",
-  [BaseColor.BLUE_LIGHT]: "bg-appearance-blue",
-  [BaseColor.PURPLE_LIGHT]: "bg-appearance-purple",
-  [BaseColor.LAVENDER_LIGHT]: "bg-appearance-pink",
-  [BaseColor.GRAY_LIGHT]: "bg-appearance-gray",
-  [BaseColor.RED]: "bg-appearance-pink-light",
-  [BaseColor.ORANGE]: "bg-appearance-peach-light",
-  [BaseColor.YELLOW]: "bg-appearance-yellow-light",
-  [BaseColor.GREEN]: "bg-appearance-green-light",
-  [BaseColor.TEAL]: "bg-appearance-teal-light",
-  [BaseColor.CYAN]: "bg-appearance-sky-light",
-  [BaseColor.BLUE]: "bg-appearance-blue-light",
-  [BaseColor.PINK]: "bg-appearance-lavender-light",
-  [BaseColor.PURPLE]: "bg-appearance-purple-light",
-  [BaseColor.GRAY]: "bg-appearance-gray-light",
+export const BASE_COLOR_ACCENT_MAP: Record<BaseColor, string> = {
+  [BaseColor.PINK_LIGHT]: "bg-appearance-pink-light/50",
+  [BaseColor.PEACH_LIGHT]: "bg-appearance-peach-light/50",
+  [BaseColor.YELLOW_LIGHT]: "bg-appearance-yellow-light/50",
+  [BaseColor.GREEN_LIGHT]: "bg-appearance-green-light/50",
+  [BaseColor.TEAL_LIGHT]: "bg-appearance-teal-light/50",
+  [BaseColor.SKY_LIGHT]: "bg-appearance-sky-light/50",
+  [BaseColor.BLUE_LIGHT]: "bg-appearance-blue-light/50",
+  [BaseColor.PURPLE_LIGHT]: "bg-appearance-purple-light/50",
+  [BaseColor.LAVENDER_LIGHT]: "bg-appearance-lavender-light/50",
+  [BaseColor.GRAY_LIGHT]: "bg-appearance-gray-light/50",
+  [BaseColor.RED]: "bg-appearance-pink-light/50",
+  [BaseColor.ORANGE]: "bg-appearance-peach-light/50",
+  [BaseColor.YELLOW]: "bg-appearance-yellow-light/50",
+  [BaseColor.GREEN]: "bg-appearance-green-light/50",
+  [BaseColor.TEAL]: "bg-appearance-teal-light/50",
+  [BaseColor.CYAN]: "bg-appearance-sky-light/50",
+  [BaseColor.BLUE]: "bg-appearance-blue-light/50",
+  [BaseColor.PINK]: "bg-appearance-lavender-light/50",
+  [BaseColor.PURPLE]: "bg-appearance-purple-light/50",
+  [BaseColor.GRAY]: "bg-appearance-gray-light/50",
 };
 
 export function isBaseColorLight(color: BaseColor): boolean {
@@ -54,6 +54,6 @@ export function getBaseColorClass(color: BaseColor): string {
   return BASE_COLOR_MAP[color] ?? "bg-appearance-blue";
 }
 
-export function getOppositeBaseColorClass(color: BaseColor): string {
-  return OPPOSITE_BASE_COLOR_MAP[color] ?? "bg-appearance-blue-light";
+export function getBaseAccentColorClass(color: BaseColor): string {
+  return BASE_COLOR_ACCENT_MAP[color] ?? "bg-appearance-blue-light";
 }

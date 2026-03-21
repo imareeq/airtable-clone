@@ -17,6 +17,10 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Checkbox } from "./ui/checkbox";
+import { Button } from "./ui/button";
+import { PlusIcon } from "@phosphor-icons/react";
+import { api } from "~/trpc/react";
+import { CreateColumnPopover } from "./create-column-popover";
 
 interface SpreadsheetProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -36,6 +40,7 @@ export function Spreadsheet<TData, TValue>({
 }: SpreadsheetProps<TData, TValue>) {
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
   const tableRef = useRef<HTMLTableElement>(null);
+  const headerRowRef = useRef<HTMLTableRowElement>(null);
 
   const spreadsheet = useReactTable({
     data,
@@ -163,148 +168,161 @@ export function Spreadsheet<TData, TValue>({
   return (
     <div
       onClick={() => setActiveCell(null)}
-      className="h-full w-full overflow-auto outline-none focus:outline-none bg-muted"
+      className="bg-muted h-full w-full overflow-auto outline-none focus:outline-none"
     >
-      <Table
-        ref={tableRef}
-        className="w-auto outline-none focus:outline-none bg-background"
-        tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={handleTableKeyDown}
-      >
-        <TableHeader className="bg-background sticky top-0 z-10">
-          {spreadsheet.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="hover:bg-muted h-8">
-              <TableHead className="border-border w-21! border-r text-center text-[12px] font-normal">
-                <Checkbox />
-              </TableHead>
-              {headerGroup.headers.map((header) => (
-                <TableHead
-                  key={header.id}
-                  className="text-muted-foreground w-44 border-r px-2 text-[12px] font-normal"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-
-        <TableBody>
-          {rows.length ? (
-            rows.map((row, rowIndex) => (
+      <div className="relative inline-block">
+        <Table
+          ref={tableRef}
+          className="bg-background relative w-auto outline-none focus:outline-none"
+          tabIndex={-1}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={handleTableKeyDown}
+        >
+          <TableHeader className="bg-background sticky top-0 z-10">
+            {spreadsheet.getHeaderGroups().map((headerGroup) => (
               <TableRow
-                key={row.id}
-                className="h-8 hover:bg-[#f9f9f9]"
-                data-state={row.getIsSelected() && "selected"}
+                ref={headerRowRef}
+                key={headerGroup.id}
+                className="hover:bg-background relative h-8"
               >
-                <TableCell className="text-muted-foreground border-border group/row-cell w-21! border-l-0 px-2 text-xs">
-                  <span className="group-hover/row-cell:hidden">
-                    {rowIndex + 1}
-                  </span>
-                  <Checkbox className="hidden cursor-pointer group-hover/row-cell:block" />
-                </TableCell>
-
-                {row.getVisibleCells().map((cell, colIndex) => {
-                  const isSelected =
-                    activeCell?.rowIndex === rowIndex &&
-                    activeCell?.colIndex === colIndex;
-                  const isEditing =
-                    isSelected && activeCell?.mode === "editing";
-
-                  return (
-                    <TableCell
-                      key={cell.id}
-                      className={cn(
-                        "border-border relative w-44 border-r p-0",
-                        isSelected && "z-10",
-                      )}
-                      onClick={() => {
-                        tableRef.current?.focus({ preventScroll: true });
-                        setActiveCell({ rowIndex, colIndex, mode: "selected" });
-                      }}
-                      onDoubleClick={() =>
-                        setActiveCell({ rowIndex, colIndex, mode: "editing" })
-                      }
-                    >
-                      {isSelected && (
-                        <div
-                          className="pointer-events-none absolute inset-0 z-30"
-                          style={{
-                            boxShadow: [
-                              colIndex !== 0 &&
-                                "inset 2px 0 0 0 var(--color-primary)",
-                              rowIndex !== 0 &&
-                                "inset 0 2px 0 0 var(--color-primary)",
-                              "inset -2px 0 0 0 var(--color-primary)",
-                              "inset 0 -2px 0 0 var(--color-primary)",
-                            ]
-                              .filter(Boolean)
-                              .join(", "),
-                          }}
-                        />
-                      )}
-
-                      {isEditing ? (
-                        <input
-                          autoFocus
-                          defaultValue={
-                            activeCell?.initialValue ??
-                            String(cell.getValue() ?? "")
-                          }
-                          onClick={() => handleCellClick(rowIndex, colIndex)}
-                          onDoubleClick={() =>
-                            handleCellDoubleClick(rowIndex, colIndex)
-                          }
-                          onBlur={() => exitEditing()}
-                          onKeyDown={(e) => {
-                            if (e.key === "Escape") {
-                              e.preventDefault();
-                              exitEditing();
-                            }
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              exitEditing(1, 0);
-                            }
-                            if (e.key === "Tab") {
-                              e.preventDefault();
-                              e.shiftKey
-                                ? exitEditing(0, -1)
-                                : exitEditing(0, 1);
-                            }
-                          }}
-                          className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
-                        />
-                      ) : (
-                        <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </div>
-                      )}
-                    </TableCell>
-                  );
-                })}
+                <TableHead className="border-border w-21! border-r text-center text-[12px] font-normal">
+                  <Checkbox />
+                </TableHead>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className="hover:bg-muted text-muted-foreground w-44 border-r px-2 text-[12px] font-normal"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
+            ))}
+          </TableHeader>
+
+          <TableBody>
+            {rows.length ? (
+              rows.map((row, rowIndex) => (
+                <TableRow
+                  key={row.id}
+                  className="hover:bg-muted h-8"
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  <TableCell className="text-muted-foreground border-border group/row-cell w-21! border-l-0 px-2 text-xs">
+                    <span className="group-hover/row-cell:hidden">
+                      {rowIndex + 1}
+                    </span>
+                    <Checkbox className="hidden cursor-pointer group-hover/row-cell:block" />
+                  </TableCell>
+
+                  {row.getVisibleCells().map((cell, colIndex) => {
+                    const isSelected =
+                      activeCell?.rowIndex === rowIndex &&
+                      activeCell?.colIndex === colIndex;
+                    const isEditing =
+                      isSelected && activeCell?.mode === "editing";
+
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          "border-border relative w-44 border-r p-0",
+                          isSelected && "z-10",
+                        )}
+                        onClick={() => {
+                          tableRef.current?.focus({ preventScroll: true });
+                          setActiveCell({
+                            rowIndex,
+                            colIndex,
+                            mode: "selected",
+                          });
+                        }}
+                        onDoubleClick={() =>
+                          setActiveCell({ rowIndex, colIndex, mode: "editing" })
+                        }
+                      >
+                        {isSelected && (
+                          <div
+                            className="pointer-events-none absolute inset-0 z-30"
+                            style={{
+                              boxShadow: [
+                                colIndex !== 0 &&
+                                  "inset 2px 0 0 0 var(--color-primary)",
+                                rowIndex !== 0 &&
+                                  "inset 0 2px 0 0 var(--color-primary)",
+                                "inset -2px 0 0 0 var(--color-primary)",
+                                "inset 0 -2px 0 0 var(--color-primary)",
+                              ]
+                                .filter(Boolean)
+                                .join(", "),
+                            }}
+                          />
+                        )}
+
+                        {isEditing ? (
+                          <input
+                            autoFocus
+                            defaultValue={
+                              activeCell?.initialValue ??
+                              String(cell.getValue() ?? "")
+                            }
+                            onClick={() => handleCellClick(rowIndex, colIndex)}
+                            onDoubleClick={() =>
+                              handleCellDoubleClick(rowIndex, colIndex)
+                            }
+                            onBlur={() => handleCellBlur()}
+                            onKeyDown={(e) => handleCellKeyDown(e)}
+                            className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
+                          />
+                        ) : (
+                          <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length + 2}
+                  className="text-muted-foreground h-24 text-center text-[13px]"
+                >
+                  No results
+                </TableCell>
+              </TableRow>
+            )}
+            <TableRow className="hover:bg-transparent">
               <TableCell
-                colSpan={columns.length + 2}
-                className="text-muted-foreground h-24 text-center text-[13px]"
+                colSpan={columns.length + 1}
+                className="border-l-0 p-0"
               >
-                No results
+                <Button
+                  variant="ghost"
+                  className="hover:bg-muted hover:text-foreground flex h-8 w-full items-center justify-start rounded-none border-r border-b px-2 font-normal text-black/75"
+                  onClick={() => {
+                    /* TODO: call create a row function here*/
+                  }}
+                >
+                  <PlusIcon className="size-4" />
+                </Button>
               </TableCell>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableBody>
+        </Table>
+
+        <CreateColumnPopover />
+      </div>
     </div>
   );
 }

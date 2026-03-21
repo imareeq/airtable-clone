@@ -7,13 +7,22 @@ export const ColumnService = {
     tableId: string,
     data: { name: string; type?: ColumnType },
   ) {
-    return db.column.create({
+    const existingCount = await db.column.count({ where: { tableId } });
+
+    const column = await db.column.create({
       data: {
         name: data.name,
-        type: data.type,
+        type: data.type ?? ColumnType.TEXT,
         tableId,
+        orderIndex: existingCount,
       },
     });
+
+    await db.$executeRawUnsafe(
+      `ALTER TABLE "spreadsheet_${tableId}" ADD COLUMN "${column.id}" TEXT`,
+    );
+
+    return column;
   },
 
   async createMany(
@@ -21,12 +30,14 @@ export const ColumnService = {
     tableId: string,
     columns: { name: string; type: ColumnType }[],
   ) {
+    const existingCount = await db.column.count({ where: { tableId } });
+
     return db.column.createManyAndReturn({
       data: columns.map((col, i) => ({
         tableId,
         name: col.name,
         type: col.type,
-        orderIndex: i,
+        orderIndex: existingCount + i,
       })),
     });
   },
@@ -46,8 +57,14 @@ export const ColumnService = {
   },
 
   async delete(db: DBClient, columnId: string) {
-    return db.column.delete({
+    const column = await db.column.delete({
       where: { id: columnId },
     });
+
+    await db.$executeRawUnsafe(
+      `ALTER TABLE "spreadsheet_${column.tableId}" DROP COLUMN "${columnId}"`,
+    );
+
+    return column;
   },
 };

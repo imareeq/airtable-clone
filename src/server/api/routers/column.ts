@@ -14,19 +14,21 @@ export const ColumnRouter = createTRPCRouter({
   create: tableProcedure
     .input(
       z.object({
-        tableId: z.string(),
+        tableId: z.string().length(17),
         name: z.string(),
         type: z.enum(ColumnType).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ColumnService.create(ctx.db, input.tableId, input);
+      return ctx.db.$transaction((tx) => {
+        return ColumnService.create(tx, input.tableId, input);
+      });
     }),
 
   createMany: tableProcedure
     .input(
       z.object({
-        tableId: z.string(),
+        tableId: z.string().length(17),
         columns: z.array(ColumnModelSchema.pick({ name: true, type: true })),
       }),
     )
@@ -39,7 +41,7 @@ export const ColumnRouter = createTRPCRouter({
   update: columnProcedure
     .input(
       z.object({
-        columnId: z.string(),
+        columnId: z.string().length(17),
         name: z.string().optional(),
         type: z.enum(ColumnType).optional(),
       }),
@@ -49,6 +51,8 @@ export const ColumnRouter = createTRPCRouter({
     }),
 
   delete: columnProcedure.mutation(async ({ ctx, input }) => {
-    return ColumnService.delete(ctx.db, input.columnId);
+    return ctx.db.$transaction((tx) => {
+      return ColumnService.delete(tx, input.columnId);
+    });
   }),
 });

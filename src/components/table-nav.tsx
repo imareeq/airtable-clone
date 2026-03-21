@@ -4,7 +4,7 @@ import { TableTabs } from "./table-tabs";
 import { useParams } from "next/navigation";
 import { useBase } from "~/contexts/base-context";
 import { cn } from "~/lib/utils";
-import { getOppositeBaseColorClass, isBaseColorLight } from "~/lib/color-utils";
+import { getBaseAccentColorClass, isBaseColorLight } from "~/lib/color-utils";
 import TableNavToolsDropdown from "./table-nav-tools-dropdown";
 
 export default function TableNav() {
@@ -17,14 +17,9 @@ export default function TableNav() {
     <nav
       className={cn(
         "border-border relative flex h-8 items-center justify-between gap-0 border-b pr-2",
+        base?.color ? getBaseAccentColorClass(base.color) : "bg-background",
       )}
     >
-      <div
-        className={cn(
-          "absolute inset-0 opacity-25",
-          base?.color ? getOppositeBaseColorClass(base.color) : "bg-background",
-        )}
-      />
       <div className="relative flex items-end">
         <TableTabs
           baseId={base.id}
