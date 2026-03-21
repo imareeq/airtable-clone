@@ -40,11 +40,6 @@ type ActiveCell = {
   initialValue?: string;
 };
 
-const columnTypeIcon = {
-  [ColumnType.TEXT]: <TextAaIcon className="text-foreground size-4" />,
-  [ColumnType.NUMBER]: <HashIcon className="text-foreground size-4" />,
-};
-
 function isValidNumberInput(value: string): boolean {
   if (value === "" || value === "-" || value === "." || value === "-.")
     return true;
@@ -337,25 +332,12 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
                       key={header.id}
                       className="hover:bg-muted text-foreground w-44 border-r px-2 text-[12px] font-normal"
                     >
-                      {header.isPlaceholder ? null : (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-muted-foreground">
-                            {
-                              columnTypeIcon[
-                                (
-                                  header.column.columnDef.meta as {
-                                    type: ColumnType;
-                                  }
-                                )?.type
-                              ]
-                            }
-                          </span>
-                          {flexRender(
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
                           )}
-                        </div>
-                      )}
                     </TableHead>
                   ))}
                 </TableRow>
