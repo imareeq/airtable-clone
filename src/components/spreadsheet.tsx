@@ -6,7 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { cn } from "~/lib/utils";
 import {
   Table,
@@ -45,11 +45,30 @@ const columnTypeIcon = {
   [ColumnType.NUMBER]: <HashIcon className="text-foreground size-4" />,
 };
 
+function isValidNumberInput(value: string): boolean {
+  if (value === "" || value === "-" || value === "." || value === "-.")
+    return true;
+  return !isNaN(Number(value));
+}
+
+function validateValue(value: string, type: ColumnType): string | null {
+  if (type === ColumnType.NUMBER) {
+    if (!value || value.trim() === "") return null;
+    if (value === "-" || value === "." || value === "-.") return null;
+    if (isNaN(Number(value))) {
+      return "please enter a number";
+    }
+  }
+  return null;
+}
+
 export function Spreadsheet<TData extends { id: string }, TValue>({
   columns,
   data,
 }: SpreadsheetProps<TData, TValue>) {
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
+  const [editingValue, setEditingValue] = useState<string>("");
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [contextRowIndex, setContextRowIndex] = useState<number | null>(null);
   const [checkedRows, setCheckedRows] = useState<Set<string>>(new Set());
   const tableRef = useRef<HTMLTableElement>(null);
@@ -66,6 +85,38 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
 
   const rows = spreadsheet.getRowModel().rows;
   const visibleCols = spreadsheet.getAllColumns();
+
+  useEffect(() => {
+    if (activeCell?.mode === "editing") {
+      const rowIndex = activeCell.rowIndex;
+      const colIndex = activeCell.colIndex;
+      const cell = rows[rowIndex]?.getVisibleCells()[colIndex];
+      if (cell) {
+        const columnType = (cell.column.columnDef.meta as { type: ColumnType })
+          ?.type;
+        const currentVal = String(cell.getValue() ?? "");
+
+        if (activeCell.initialValue !== undefined) {
+          if (
+            columnType === ColumnType.NUMBER &&
+            !isValidNumberInput(activeCell.initialValue)
+          ) {
+            setEditingValue(currentVal);
+            setValidationError("please enter a number");
+          } else {
+            setEditingValue(activeCell.initialValue);
+            setValidationError(null);
+          }
+        } else {
+          setEditingValue(currentVal);
+          setValidationError(null);
+        }
+      }
+    } else {
+      setEditingValue("");
+      setValidationError(null);
+    }
+  }, [activeCell, rows]);
 
   const navigate = useCallback(
     (rowDelta: number, colDelta: number) => {
@@ -121,17 +172,6 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
         default:
           if (e.key.length === 1 && !e.metaKey && !e.ctrlKey) {
             e.preventDefault();
-
-            const activeColType = activeCell
-              ? table.columns[activeCell.colIndex]?.type
-              : undefined;
-
-            if (activeColType === ColumnType.NUMBER) {
-              const numberSchema = z.string().regex(/^-?\d*\.?\d*$/);
-              const currentValue = activeCell?.initialValue ?? "";
-              const nextValue = currentValue + e.key;
-              if (!numberSchema.safeParse(nextValue).success) return;
-            }
 
             setActiveCell((p) =>
               p ? { ...p, mode: "editing", initialValue: e.key } : null,
@@ -412,42 +452,92 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
                             )}
 
                             {isEditing ? (
-                              <input
-                                autoFocus
-                                defaultValue={
-                                  activeCell?.initialValue ??
-                                  String(cell.getValue() ?? "")
-                                }
-                                onClick={() =>
-                                  handleCellClick(rowIndex, colIndex)
-                                }
-                                onDoubleClick={() =>
-                                  handleCellDoubleClick(rowIndex, colIndex)
-                                }
-                                onBlur={(e) => {
-                                  updateCell.mutate({
-                                    tableId: table.id,
-                                    rowId: row.original.id,
-                                    columnId: cell.column.id,
-                                    value: e.target.value,
-                                  });
+                              <div className="relative h-full w-full">
+                                <input
+                                  autoFocus
+                                  value={editingValue}
+                                  onChange={(e) => {
+                                    const newValue = e.target.value;
+                                    const columnType = (
+                                      cell.column.columnDef.meta as {
+                                        type: ColumnType;
+                                      }
+                                    )?.type;
 
-                                  handleCellBlur();
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" || e.key === "Tab") {
-                                    updateCell.mutate({
-                                      tableId: table.id,
-                                      rowId: row.original.id,
-                                      columnId: cell.column.id,
-                                      value: (e.target as HTMLInputElement)
-                                        .value,
-                                    });
+                                    if (
+                                      columnType === ColumnType.NUMBER &&
+                                      !isValidNumberInput(newValue)
+                                    ) {
+                                      setValidationError(
+                                        "please enter a number",
+                                      );
+                                    } else {
+                                      setEditingValue(newValue);
+                                      setValidationError(null);
+                                    }
+                                  }}
+                                  onClick={() =>
+                                    handleCellClick(rowIndex, colIndex)
                                   }
-                                  handleCellKeyDown(e);
-                                }}
-                                className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
-                              />
+                                  onDoubleClick={() =>
+                                    handleCellDoubleClick(rowIndex, colIndex)
+                                  }
+                                  onBlur={(e) => {
+                                    const columnType = (
+                                      cell.column.columnDef.meta as {
+                                        type: ColumnType;
+                                      }
+                                    )?.type;
+                                    const error = validateValue(
+                                      e.target.value,
+                                      columnType,
+                                    );
+                                    if (!error) {
+                                      updateCell.mutate({
+                                        tableId: table.id,
+                                        rowId: row.original.id,
+                                        columnId: cell.column.id,
+                                        value: e.target.value,
+                                      });
+                                    }
+
+                                    handleCellBlur();
+                                  }}
+                                  onKeyDown={(e) => {
+                                    const columnType = (
+                                      cell.column.columnDef.meta as {
+                                        type: ColumnType;
+                                      }
+                                    )?.type;
+                                    if (e.key === "Enter" || e.key === "Tab") {
+                                      const value = (
+                                        e.target as HTMLInputElement
+                                      ).value;
+                                      const error = validateValue(
+                                        value,
+                                        columnType,
+                                      );
+                                      if (error) {
+                                        e.preventDefault();
+                                        return;
+                                      }
+                                      updateCell.mutate({
+                                        tableId: table.id,
+                                        rowId: row.original.id,
+                                        columnId: cell.column.id,
+                                        value: value,
+                                      });
+                                    }
+                                    handleCellKeyDown(e);
+                                  }}
+                                  className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
+                                />
+                                {validationError && (
+                                  <div className="bg-bacgrkound text-foreground absolute top-full -left-px z-50 flex h-8 w-[calc(100%+2px)] items-center px-2 text-right text-xs text-[12px] shadow-lg">
+                                    {validationError}
+                                  </div>
+                                )}
+                              </div>
                             ) : (
                               <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
                                 {flexRender(
