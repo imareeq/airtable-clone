@@ -32,16 +32,16 @@ export default async function AppLayout({
   children: ReactNode;
   params: Promise<{ baseId: string }>;
 }) {
-  const { baseId } = await params
-  const base = await api.base.getById({ baseId })
+  const { baseId } = await params;
+  const base = await api.base.getById({ baseId });
 
   return (
     <BaseProvider base={base}>
-      <div className="h-screen overflow-hidden">
+      <div className="h-full overflow-hidden">
         <div className="h-full [--header-height:calc(--spacing(14))]">
-          <SidebarProvider open={false}>
+          <SidebarProvider open={false} className="h-full w-full min-h-0">
             <AppSidebar collapsible="icon" />
-            <SidebarInset className="bg-muted flex h-auto w-full flex-col">
+            <SidebarInset className="bg-muted flex h-full w-full flex-col overflow-hidden">
               <AppHeader />
               {children}
             </SidebarInset>
@@ -49,5 +49,5 @@ export default async function AppLayout({
         </div>
       </div>
     </BaseProvider>
-  )
+  );
 }

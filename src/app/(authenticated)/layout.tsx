@@ -12,5 +12,5 @@ export default function AuthenticatedLayout({
 }: {
   children: ReactNode;
 }) {
-  return <div className="min-h-screen">{children}</div>;
+  return <div className="h-screen overflow-hidden">{children}</div>;
 }

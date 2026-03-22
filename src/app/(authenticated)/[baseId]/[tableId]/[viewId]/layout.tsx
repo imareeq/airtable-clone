@@ -17,7 +17,7 @@ export default async function ViewLayout({
 
   return (
     <ViewProvider view={view}>
-      <SidebarProvider className="relative flex flex-col overflow-hidden">
+      <SidebarProvider className="relative flex h-full min-h-0 w-full flex-col overflow-hidden">
         <ViewHeader />
         <div className="relative flex flex-1 overflow-hidden">
           <ViewSidebar
@@ -25,7 +25,9 @@ export default async function ViewLayout({
             className="absolute inset-y-0 h-full"
             collapsible="offcanvas"
           />
-          <SidebarInset className="overflow-auto">{children}</SidebarInset>
+          <SidebarInset className="h-full w-full overflow-hidden">
+            {children}
+          </SidebarInset>
         </div>
       </SidebarProvider>
     </ViewProvider>
