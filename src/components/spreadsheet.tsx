@@ -284,9 +284,9 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
   return (
     <div
       onClick={() => setActiveCell(null)}
-      className="bg-muted h-full w-full overflow-auto outline-none focus:outline-none"
+      className="bg-muted h-full w-full outline-none focus:outline-none"
     >
-      <div className="relative inline-block">
+      <div className="relative h-full w-full overflow-auto">
         <SpreadsheetContextMenu
           onDeleteRow={() => {
             if (contextRowIndex === null) return;
@@ -301,7 +301,7 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
             onClick={(e) => e.stopPropagation()}
             onKeyDown={handleTableKeyDown}
           >
-            <TableHeader className="bg-background sticky top-0 z-10">
+            <TableHeader className="bg-background sticky top-0 z-10 shadow-[0_1px_0_0_var(--border)]">
               {spreadsheet.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   ref={headerRowRef}
@@ -340,6 +340,9 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
                           )}
                     </TableHead>
                   ))}
+                  <TableHead className="border-border absolute left-full px-0">
+                    <CreateColumnPopover />
+                  </TableHead>
                 </TableRow>
               ))}
             </TableHeader>
@@ -356,7 +359,7 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
                       data-state={row.getIsSelected() && "selected"}
                       onContextMenu={() => setContextRowIndex(rowIndex)}
                     >
-                      <TableCell className="text-muted-foreground border-border group/row-cell w-21! border-l-0 text-center text-xs">
+                      <TableCell className="text-muted-foreground border-border group/row-cell w-21 border-l-0 text-center text-xs">
                         {!checkedRows.has(row.original.id) && (
                           <span className="flex w-full items-center justify-center pr-7.5 group-hover/row-cell:hidden">
                             {rowIndex + 1}
@@ -400,7 +403,9 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
                               isSelected && "z-10",
                             )}
                             onClick={() => {
-                              tableRef.current?.focus({ preventScroll: true });
+                              tableRef.current?.focus({
+                                preventScroll: true,
+                              });
                               setActiveCell({
                                 rowIndex,
                                 colIndex,
@@ -554,8 +559,6 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
             </TableBody>
           </Table>
         </SpreadsheetContextMenu>
-
-        <CreateColumnPopover />
       </div>
     </div>
   );

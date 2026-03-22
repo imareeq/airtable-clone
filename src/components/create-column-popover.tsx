@@ -71,7 +71,7 @@ export function CreateColumnPopover() {
         <Button
           size="lg"
           variant="outline"
-          className="bg-background hover:bg-muted absolute top-0 left-full h-[32.5px] w-23.25 rounded-none border-t-0 border-r border-l-0 leading-none"
+          className="bg-background hover:bg-muted h-8 w-23.25 rounded-none border-0 border-r leading-none shadow-[0_1.5px_0_0_var(--border)]"
         >
           <PlusIcon className="size-4" />
         </Button>
