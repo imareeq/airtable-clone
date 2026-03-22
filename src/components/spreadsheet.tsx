@@ -296,7 +296,7 @@ export function Spreadsheet<TData extends { id: string }, TValue>({
         >
           <Table
             ref={tableRef}
-            className="bg-background relative w-auto outline-none focus:outline-none"
+            className="bg-background relative w-auto min-w-max outline-none focus:outline-none"
             tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={handleTableKeyDown}
