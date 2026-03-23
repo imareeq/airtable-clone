@@ -40,11 +40,13 @@ export default function Page() {
     [data],
   );
 
+  const totalCount = data?.pages[0]?.totalCount ?? rows.length ?? 0;
+
   const virtualizer = useVirtualizer({
-    count: rows.length || 0,
+    count: totalCount,
     estimateSize: () => 32,
     getScrollElement: () => scrollContainerRef.current,
-    overscan: 20,
+    overscan: 50,
   });
 
   const virtualRows = virtualizer.getVirtualItems();
@@ -88,7 +90,7 @@ export default function Page() {
   return (
     <div
       onClick={() => setActiveCell(null)}
-      className="bg-muted relative h-full w-full outline-none focus:outline-none"
+      className="bg-muted relative flex h-full w-full flex-col outline-none focus:outline-none"
     >
       <SeedDataButton tableId={table.id} />
       <div
@@ -118,6 +120,9 @@ export default function Page() {
             />
           </div>
         </div>
+      </div>
+      <div className="bg-background text-muted-foreground flex h-6 w-full items-center border-t px-3 text-xs">
+        {totalCount.toLocaleString()} records
       </div>
     </div>
   );
