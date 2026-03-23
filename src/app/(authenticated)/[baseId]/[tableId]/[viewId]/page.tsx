@@ -25,15 +25,15 @@ export default function Page() {
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { columns: tableColumns } = useTable();
-  const { ref: fetchNextRef, inView } = useInView();
 
-  const { data, fetchNextPage } = api.table.getRows.useInfiniteQuery(
-    { tableId: table.id },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-      initialCursor: undefined,
-    },
-  );
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    api.table.getRows.useInfiniteQuery(
+      { tableId: table.id },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+        initialCursor: undefined,
+      },
+    );
 
   const rows = useMemo(
     () => data?.pages.flatMap((page) => page.rows) ?? [],
@@ -44,7 +44,7 @@ export default function Page() {
     count: rows.length || 0,
     estimateSize: () => 32,
     getScrollElement: () => scrollContainerRef.current,
-    overscan: 5,
+    overscan: 20,
   });
 
   const virtualRows = virtualizer.getVirtualItems();
@@ -67,10 +67,23 @@ export default function Page() {
   }));
 
   useEffect(() => {
-    if (inView) {
-      fetchNextPage();
+    const virtualItems = virtualizer.getVirtualItems();
+    if (virtualItems.length === 0 || !hasNextPage || isFetchingNextPage) return;
+
+    const lastItem = virtualItems[virtualItems.length - 1]!;
+
+    const threshold = rows.length - 20;
+
+    if (lastItem.index >= threshold) {
+      void fetchNextPage();
     }
-  }, [inView, fetchNextPage]);
+  }, [
+    virtualRows,
+    rows.length,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  ]);
 
   return (
     <div
@@ -102,7 +115,6 @@ export default function Page() {
               data={visibleRows as SpreadsheetRow[]}
               activeCell={activeCell}
               setActiveCell={setActiveCell}
-              fetchNextRef={fetchNextRef}
             />
           </div>
         </div>
