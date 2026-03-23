@@ -29,14 +29,12 @@ import { ColumnType } from "generated/prisma";
 import type { ActiveCell } from "~/app/(authenticated)/[baseId]/[tableId]/[viewId]/page";
 import { isValidNumberInput, validateValue } from "~/lib/cell-utils";
 import { useEditingCell } from "~/hooks/use-editing-cell";
-import type { SpreadsheetRow } from "~/server/api/routers/table";
 
 interface SpreadsheetProps<TData extends { id: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   activeCell: ActiveCell | null;
   setActiveCell: React.Dispatch<React.SetStateAction<ActiveCell | null>>;
-  fetchNextRef: (node?: Element | null | undefined) => void;
 }
 
 export function Spreadsheet<
@@ -47,7 +45,6 @@ export function Spreadsheet<
   data,
   activeCell,
   setActiveCell,
-  fetchNextRef,
 }: SpreadsheetProps<TData, TValue>) {
   const [contextRowIndex, setContextRowIndex] = useState<number | null>(null);
   const [checkedRows, setCheckedRows] = useState<Set<string>>(new Set());
@@ -503,7 +500,6 @@ export function Spreadsheet<
               })
             : null}
           <TableRow
-            ref={fetchNextRef}
             className="hover:bg-transparent"
             onContextMenu={(e) => e.stopPropagation()}
           >
