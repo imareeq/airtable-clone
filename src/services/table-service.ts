@@ -6,6 +6,8 @@ import { ColumnType } from "generated/prisma";
 import { nanoid } from "nanoid";
 import type { SpreadsheetRow } from "~/server/api/routers/table";
 
+export const ROW_LIMIT = 50;
+
 export const TableService = {
   async create(db: DBClient, baseId: string, name: string) {
     const table = await db.table.create({
@@ -29,16 +31,25 @@ export const TableService = {
     return table;
   },
 
-  async getRows(db: DBClient, tableId: string, columnIds: string[]) {
+  async getRows(
+    db: DBClient,
+    tableId: string,
+    columnIds: string[],
+    cursor: number = 0,
+  ) {
     const cols = [
       `"id"`,
       `"order_index"`,
-      `ROW_NUMBER() OVER (ORDER BY "order_index" ASC) AS "row_number"`,
       ...columnIds.map((id) => `"${id}"`),
     ].join(", ");
 
     return db.$queryRawUnsafe<SpreadsheetRow[]>(
-      `SELECT ${cols} FROM "spreadsheet_${tableId}" ORDER BY "order_index" ASC`,
+      `SELECT ${cols}
+     FROM "spreadsheet_${tableId}"
+     ORDER BY "order_index" ASC
+     LIMIT ${ROW_LIMIT}
+     OFFSET $1`,
+      cursor,
     );
   },
 
@@ -97,7 +108,7 @@ export const TableService = {
 
     const columnDefs = [
       `"id" TEXT PRIMARY KEY`,
-      `"order_index" BIGINT GENERATED ALWAYS AS IDENTITY`,
+      `"order_index" INT GENERATED ALWAYS AS IDENTITY`,
       ...columns.map((col) => `"${col.id}" TEXT`),
     ].join(", ");
 
@@ -108,11 +119,12 @@ export const TableService = {
     db: DBClient,
     tableId: string,
     columns: { id: string; name: string; type: ColumnType }[],
+    numRows: number = 10,
   ) {
     const tableName = `spreadsheet_${tableId}`;
 
     const colNames = [`"id"`, ...columns.map((c) => `"${c.id}"`)].join(", ");
-    const rows = generateFakeRows(columns, 10);
+    const rows = generateFakeRows(columns, numRows);
 
     for (const row of rows) {
       const values = [row.id, ...row.values];
