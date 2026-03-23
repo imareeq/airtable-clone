@@ -11,6 +11,7 @@ import type { SpreadsheetRow } from "~/server/api/routers/table";
 import { api } from "~/trpc/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useInView } from "react-intersection-observer";
+import SeedDataButton from "~/components/seed-data-button";
 
 export type ActiveCell = {
   rowIndex: number;
@@ -20,14 +21,14 @@ export type ActiveCell = {
 };
 
 export default function Page() {
-  const { tableId } = useParams<{ tableId: string }>();
+  const table = useTable();
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { columns: tableColumns } = useTable();
   const { ref: fetchNextRef, inView } = useInView();
 
   const { data, fetchNextPage } = api.table.getRows.useInfiniteQuery(
-    { tableId },
+    { tableId: table.id },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       initialCursor: undefined,
@@ -74,8 +75,9 @@ export default function Page() {
   return (
     <div
       onClick={() => setActiveCell(null)}
-      className="bg-muted h-full w-full outline-none focus:outline-none"
+      className="bg-muted relative h-full w-full outline-none focus:outline-none"
     >
+      <SeedDataButton tableId={table.id} />
       <div
         ref={scrollContainerRef}
         className="relative h-full w-full overflow-auto"

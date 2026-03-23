@@ -214,15 +214,20 @@ export function Spreadsheet<
     onMutate: async ({ rowId, columnId, value }) => {
       await utils.table.getRows.cancel({ tableId: table.id });
 
-      const previousRows = utils.table.getRows.getData({ tableId: table.id });
+      const previousRows = utils.table.getRows.getInfiniteData({
+        tableId: table.id,
+      });
 
-      utils.table.getRows.setData({ tableId: table.id }, (old) => {
+      utils.table.getRows.setInfiniteData({ tableId: table.id }, (old) => {
         if (!old) return old;
         return {
           ...old,
-          rows: old.rows.map((row) =>
-            row.id === rowId ? { ...row, [columnId]: value } : row,
-          ),
+          pages: old.pages.map((page) => ({
+            ...page,
+            rows: page.rows.map((row) =>
+              row.id === rowId ? { ...row, [columnId]: value } : row,
+            ),
+          })),
         };
       });
 
@@ -230,7 +235,7 @@ export function Spreadsheet<
     },
     onError: (error, _vars, context) => {
       if (context?.previousRows) {
-        utils.table.getRows.setData(
+        utils.table.getRows.setInfiniteData(
           { tableId: table.id },
           context.previousRows,
         );
@@ -309,11 +314,6 @@ export function Spreadsheet<
                 const rowIndex = row.original.row_number - 1;
                 return (
                   <TableRow
-                    ref={
-                      row.original.row_number === rows.length - 20
-                        ? fetchNextRef
-                        : null
-                    }
                     key={row.id}
                     className={cn(
                       "hover:bg-muted h-8",
@@ -503,6 +503,7 @@ export function Spreadsheet<
               })
             : null}
           <TableRow
+            ref={fetchNextRef}
             className="hover:bg-transparent"
             onContextMenu={(e) => e.stopPropagation()}
           >

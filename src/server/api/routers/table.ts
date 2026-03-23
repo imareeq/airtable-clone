@@ -136,4 +136,23 @@ export const TableRouter = createTRPCRouter({
       return await TableService.delete(tx, input.tableId);
     });
   }),
+
+  seedWithFakeData: tableProcedure
+    .input(
+      z.object({
+        numRows: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await TableService.seedTableWithFakeData(
+        ctx.db,
+        ctx.table.id,
+        ctx.table.columns.map((col) => ({
+          id: col.id,
+          name: col.name,
+          type: col.type,
+        })),
+        input.numRows,
+      );
+    }),
 });
