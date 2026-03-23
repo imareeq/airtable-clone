@@ -36,13 +36,18 @@ interface SpreadsheetProps<TData extends { id: string }, TValue> {
   data: TData[];
   activeCell: ActiveCell | null;
   setActiveCell: React.Dispatch<React.SetStateAction<ActiveCell | null>>;
+  fetchNextRef: (node?: Element | null | undefined) => void;
 }
 
-export function Spreadsheet<TData extends { id: string; row_number: number }, TValue>({
+export function Spreadsheet<
+  TData extends { id: string; row_number: number },
+  TValue,
+>({
   columns,
   data,
   activeCell,
   setActiveCell,
+  fetchNextRef,
 }: SpreadsheetProps<TData, TValue>) {
   const [contextRowIndex, setContextRowIndex] = useState<number | null>(null);
   const [checkedRows, setCheckedRows] = useState<Set<string>>(new Set());
@@ -211,11 +216,15 @@ export function Spreadsheet<TData extends { id: string; row_number: number }, TV
 
       const previousRows = utils.table.getRows.getData({ tableId: table.id });
 
-      utils.table.getRows.setData({ tableId: table.id }, (old) =>
-        old?.map((row) =>
-          row.id === rowId ? { ...row, [columnId]: value } : row,
-        ),
-      );
+      utils.table.getRows.setData({ tableId: table.id }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          rows: old.rows.map((row) =>
+            row.id === rowId ? { ...row, [columnId]: value } : row,
+          ),
+        };
+      });
 
       return { previousRows };
     },
@@ -296,192 +305,202 @@ export function Spreadsheet<TData extends { id: string; row_number: number }, TV
 
         <TableBody>
           {rows.length
-            ? rows.map((row, rowIndex) => (
-                <TableRow
-                  key={row.id}
-                  className={cn(
-                    "hover:bg-muted h-8",
-                    checkedRows.has(row.original.id) && "bg-muted",
-                  )}
-                  data-state={row.getIsSelected() && "selected"}
-                  onContextMenu={() => setContextRowIndex(rowIndex)}
-                >
-                  <TableCell className="text-muted-foreground border-border group/row-cell w-21 border-l-0 text-center text-xs">
-                    {!checkedRows.has(row.original.id) && (
-                      <span className="flex w-full items-center justify-center pr-7.5 group-hover/row-cell:hidden">
-                        {row.original.row_number}
-                      </span>
+            ? rows.map((row) => {
+                const rowIndex = row.original.row_number - 1;
+                return (
+                  <TableRow
+                    ref={
+                      row.original.row_number === rows.length - 20
+                        ? fetchNextRef
+                        : null
+                    }
+                    key={row.id}
+                    className={cn(
+                      "hover:bg-muted h-8",
+                      checkedRows.has(row.original.id) && "bg-muted",
                     )}
-                    <div
-                      className={cn(
-                        "w-full items-center justify-center pr-7.5",
-                        checkedRows.has(row.original.id)
-                          ? "flex"
-                          : "hidden group-hover/row-cell:flex",
+                    data-state={row.getIsSelected() && "selected"}
+                    onContextMenu={() =>
+                      setContextRowIndex(row.original.row_number - 1)
+                    }
+                  >
+                    <TableCell className="text-muted-foreground border-border group/row-cell w-21 border-l-0 text-center text-xs">
+                      {!checkedRows.has(row.original.id) && (
+                        <span className="flex w-full items-center justify-center pr-7.5 group-hover/row-cell:hidden">
+                          {row.original.row_number}
+                        </span>
                       )}
-                    >
-                      <Checkbox
-                        checked={checkedRows.has(row.original.id)}
-                        className="cursor-pointer"
-                        onCheckedChange={(checked) => {
-                          setCheckedRows((prev) => {
-                            const next = new Set(prev);
-                            if (checked) next.add(row.original.id);
-                            else next.delete(row.original.id);
-                            return next;
-                          });
-                        }}
-                      />
-                    </div>
-                  </TableCell>
-
-                  {row.getVisibleCells().map((cell, colIndex) => {
-                    const isSelected =
-                      activeCell?.rowIndex === rowIndex &&
-                      activeCell?.colIndex === colIndex;
-                    const isEditing =
-                      isSelected && activeCell?.mode === "editing";
-
-                    return (
-                      <TableCell
-                        key={cell.id}
+                      <div
                         className={cn(
-                          "border-border relative w-44 border-r p-0",
-                          isSelected && "z-10",
+                          "w-full items-center justify-center pr-7.5",
+                          checkedRows.has(row.original.id)
+                            ? "flex"
+                            : "hidden group-hover/row-cell:flex",
                         )}
-                        onClick={() => {
-                          tableRef.current?.focus({
-                            preventScroll: true,
-                          });
-                          setActiveCell({
-                            rowIndex,
-                            colIndex,
-                            mode: "selected",
-                          });
-                        }}
-                        onDoubleClick={() =>
-                          setActiveCell({
-                            rowIndex,
-                            colIndex,
-                            mode: "editing",
-                          })
-                        }
                       >
-                        {isSelected && (
-                          <div
-                            className="pointer-events-none absolute inset-0 z-30"
-                            style={{
-                              boxShadow: [
-                                colIndex !== 0 &&
-                                  "inset 2px 0 0 0 var(--color-primary)",
-                                rowIndex !== 0 &&
-                                  "inset 0 2px 0 0 var(--color-primary)",
-                                "inset -2px 0 0 0 var(--color-primary)",
-                                "inset 0 -2px 0 0 var(--color-primary)",
-                              ]
-                                .filter(Boolean)
-                                .join(", "),
-                            }}
-                          />
-                        )}
+                        <Checkbox
+                          checked={checkedRows.has(row.original.id)}
+                          className="cursor-pointer"
+                          onCheckedChange={(checked) => {
+                            setCheckedRows((prev) => {
+                              const next = new Set(prev);
+                              if (checked) next.add(row.original.id);
+                              else next.delete(row.original.id);
+                              return next;
+                            });
+                          }}
+                        />
+                      </div>
+                    </TableCell>
 
-                        {isEditing ? (
-                          <div className="relative h-full w-full">
-                            <input
-                              autoFocus
-                              value={editingValue}
-                              onChange={(e) => {
-                                const newValue = e.target.value;
-                                const columnType = (
-                                  cell.column.columnDef.meta as {
-                                    type: ColumnType;
-                                  }
-                                )?.type;
+                    {row.getVisibleCells().map((cell, colIndex) => {
+                      const isSelected =
+                        activeCell?.rowIndex === rowIndex &&
+                        activeCell?.colIndex === colIndex;
+                      const isEditing =
+                        isSelected && activeCell?.mode === "editing";
 
-                                if (
-                                  columnType === ColumnType.NUMBER &&
-                                  !isValidNumberInput(newValue)
-                                ) {
-                                  setValidationError("please enter a number");
-                                } else {
-                                  setEditingValue(newValue);
-                                  setValidationError(null);
-                                }
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            "border-border relative w-44 border-r p-0",
+                            isSelected && "z-10",
+                          )}
+                          onClick={() => {
+                            tableRef.current?.focus({
+                              preventScroll: true,
+                            });
+                            setActiveCell({
+                              rowIndex,
+                              colIndex,
+                              mode: "selected",
+                            });
+                          }}
+                          onDoubleClick={() =>
+                            setActiveCell({
+                              rowIndex,
+                              colIndex,
+                              mode: "editing",
+                            })
+                          }
+                        >
+                          {isSelected && (
+                            <div
+                              className="pointer-events-none absolute inset-0 z-30"
+                              style={{
+                                boxShadow: [
+                                  colIndex !== 0 &&
+                                    "inset 2px 0 0 0 var(--color-primary)",
+                                  rowIndex !== 0 &&
+                                    "inset 0 2px 0 0 var(--color-primary)",
+                                  "inset -2px 0 0 0 var(--color-primary)",
+                                  "inset 0 -2px 0 0 var(--color-primary)",
+                                ]
+                                  .filter(Boolean)
+                                  .join(", "),
                               }}
-                              onClick={() =>
-                                handleCellClick(rowIndex, colIndex)
-                              }
-                              onDoubleClick={() =>
-                                handleCellDoubleClick(rowIndex, colIndex)
-                              }
-                              onBlur={(e) => {
-                                const columnType = (
-                                  cell.column.columnDef.meta as {
-                                    type: ColumnType;
-                                  }
-                                )?.type;
-                                const error = validateValue(
-                                  e.target.value,
-                                  columnType,
-                                );
-                                if (!error) {
-                                  updateCell.mutate({
-                                    tableId: table.id,
-                                    rowId: row.original.id,
-                                    columnId: cell.column.id,
-                                    value: e.target.value,
-                                  });
-                                }
+                            />
+                          )}
 
-                                handleCellBlur();
-                              }}
-                              onKeyDown={(e) => {
-                                const columnType = (
-                                  cell.column.columnDef.meta as {
-                                    type: ColumnType;
+                          {isEditing ? (
+                            <div className="relative h-full w-full">
+                              <input
+                                autoFocus
+                                value={editingValue}
+                                onChange={(e) => {
+                                  const newValue = e.target.value;
+                                  const columnType = (
+                                    cell.column.columnDef.meta as {
+                                      type: ColumnType;
+                                    }
+                                  )?.type;
+
+                                  if (
+                                    columnType === ColumnType.NUMBER &&
+                                    !isValidNumberInput(newValue)
+                                  ) {
+                                    setValidationError("please enter a number");
+                                  } else {
+                                    setEditingValue(newValue);
+                                    setValidationError(null);
                                   }
-                                )?.type;
-                                if (e.key === "Enter" || e.key === "Tab") {
-                                  const value = (e.target as HTMLInputElement)
-                                    .value;
+                                }}
+                                onClick={() =>
+                                  handleCellClick(rowIndex, colIndex)
+                                }
+                                onDoubleClick={() =>
+                                  handleCellDoubleClick(rowIndex, colIndex)
+                                }
+                                onBlur={(e) => {
+                                  const columnType = (
+                                    cell.column.columnDef.meta as {
+                                      type: ColumnType;
+                                    }
+                                  )?.type;
                                   const error = validateValue(
-                                    value,
+                                    e.target.value,
                                     columnType,
                                   );
-                                  if (error) {
-                                    e.preventDefault();
-                                    return;
+                                  if (!error) {
+                                    updateCell.mutate({
+                                      tableId: table.id,
+                                      rowId: row.original.id,
+                                      columnId: cell.column.id,
+                                      value: e.target.value,
+                                    });
                                   }
-                                  updateCell.mutate({
-                                    tableId: table.id,
-                                    rowId: row.original.id,
-                                    columnId: cell.column.id,
-                                    value: value,
-                                  });
-                                }
-                                handleCellKeyDown(e);
-                              }}
-                              className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
-                            />
-                            {validationError && (
-                              <div className="bg-bacgrkound text-foreground absolute top-full -left-px z-50 flex h-8 w-[calc(100%+2px)] items-center px-2 text-right text-xs text-[12px] shadow-lg">
-                                {validationError}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))
+
+                                  handleCellBlur();
+                                }}
+                                onKeyDown={(e) => {
+                                  const columnType = (
+                                    cell.column.columnDef.meta as {
+                                      type: ColumnType;
+                                    }
+                                  )?.type;
+                                  if (e.key === "Enter" || e.key === "Tab") {
+                                    const value = (e.target as HTMLInputElement)
+                                      .value;
+                                    const error = validateValue(
+                                      value,
+                                      columnType,
+                                    );
+                                    if (error) {
+                                      e.preventDefault();
+                                      return;
+                                    }
+                                    updateCell.mutate({
+                                      tableId: table.id,
+                                      rowId: row.original.id,
+                                      columnId: cell.column.id,
+                                      value: value,
+                                    });
+                                  }
+                                  handleCellKeyDown(e);
+                                }}
+                                className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
+                              />
+                              {validationError && (
+                                <div className="bg-bacgrkound text-foreground absolute top-full -left-px z-50 flex h-8 w-[calc(100%+2px)] items-center px-2 text-right text-xs text-[12px] shadow-lg">
+                                  {validationError}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </div>
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })
             : null}
           <TableRow
             className="hover:bg-transparent"

@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "generatorVersion": "0.1.0",
-  "generatedAt": "2026-03-21T06:47:58.366Z",
-  "outputPath": "/home/areeq/Projects/lyra-takehome/prisma/generated",
+  "generatedAt": "2026-03-23T15:39:38.010Z",
+  "outputPath": "/Users/areeqimran/Documents/lyra-airtable-clone/prisma/generated",
   "files": [
     "schemas/enums/TransactionIsolationLevel.schema.ts",
     "schemas/enums/UserScalarFieldEnum.schema.ts",

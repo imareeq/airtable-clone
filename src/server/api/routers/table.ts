@@ -6,26 +6,55 @@ import {
   baseProcedure,
   tableProcedure,
 } from "~/server/api/trpc";
-import { TableService } from "~/services/table-service";
+import { ROW_LIMIT, TableService } from "~/services/table-service";
 
-export type SpreadsheetRow = {
-  id: string;
-  order_index: number;
-  row_number: number;
-} & Record<string, string>;
+export const SpreadsheetRowSchema = z
+  .object({
+    id: z.string(),
+    row_number: z.coerce.number(),
+  })
+  .catchall(z.union([z.string(), z.number()]).nullable());
+
+export type SpreadsheetRow = z.infer<typeof SpreadsheetRowSchema>;
 
 export const TableRouter = createTRPCRouter({
   getById: tableProcedure.query(async ({ ctx }) => {
     return ctx.table;
   }),
 
-  getRows: tableProcedure.query(async ({ ctx }) => {
-    return TableService.getRows(
-      ctx.db,
-      ctx.table.id,
-      ctx.table.columns.map((col) => col.id),
-    );
-  }),
+  getRows: tableProcedure
+    .input(
+      z.object({
+        cursor: z.number().optional(),
+      }),
+    )
+    .output(
+      z.object({
+        rows: z.array(SpreadsheetRowSchema),
+        nextCursor: z.number().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const currentOffset = input.cursor ?? 0;
+
+      const res = await TableService.getRows(
+        ctx.db,
+        ctx.table.id,
+        ctx.table.columns.map((col) => col.id),
+        currentOffset,
+      );
+
+      const rows = res.map((row, index) => ({
+        ...row,
+        row_number: currentOffset + index + 1,
+      }));
+
+      return {
+        rows,
+        nextCursor:
+          rows.length === ROW_LIMIT ? currentOffset + ROW_LIMIT : undefined,
+      };
+    }),
 
   createRow: tableProcedure.mutation(async ({ ctx }) => {
     return TableService.createRow(ctx.db, ctx.table.id);

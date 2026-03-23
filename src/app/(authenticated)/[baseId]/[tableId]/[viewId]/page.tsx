@@ -3,13 +3,14 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { ColumnType } from "generated/prisma";
 import { useParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ColumnHeader } from "~/components/column-header";
 import { Spreadsheet } from "~/components/spreadsheet";
 import { useTable } from "~/contexts/table-context";
 import type { SpreadsheetRow } from "~/server/api/routers/table";
 import { api } from "~/trpc/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useInView } from "react-intersection-observer";
 
 export type ActiveCell = {
   rowIndex: number;
@@ -23,12 +24,26 @@ export default function Page() {
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { columns: tableColumns } = useTable();
-  const { data: rows = [] } = api.table.getRows.useQuery({ tableId });
+  const { ref: fetchNextRef, inView } = useInView();
+
+  const { data, fetchNextPage } = api.table.getRows.useInfiniteQuery(
+    { tableId },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialCursor: undefined,
+    },
+  );
+
+  const rows = useMemo(
+    () => data?.pages.flatMap((page) => page.rows) ?? [],
+    [data],
+  );
 
   const virtualizer = useVirtualizer({
-    count: rows?.length,
+    count: rows.length || 0,
     estimateSize: () => 32,
     getScrollElement: () => scrollContainerRef.current,
+    overscan: 5,
   });
 
   const virtualRows = virtualizer.getVirtualItems();
@@ -49,6 +64,12 @@ export default function Page() {
       return value;
     },
   }));
+
+  useEffect(() => {
+    if (inView) {
+      fetchNextPage();
+    }
+  }, [inView, fetchNextPage]);
 
   return (
     <div
@@ -79,6 +100,7 @@ export default function Page() {
               data={visibleRows as SpreadsheetRow[]}
               activeCell={activeCell}
               setActiveCell={setActiveCell}
+              fetchNextRef={fetchNextRef}
             />
           </div>
         </div>
