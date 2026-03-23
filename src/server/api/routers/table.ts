@@ -32,6 +32,7 @@ export const TableRouter = createTRPCRouter({
       z.object({
         rows: z.array(SpreadsheetRowSchema),
         nextCursor: z.number().optional(),
+        totalCount: z.number(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -53,6 +54,7 @@ export const TableRouter = createTRPCRouter({
         rows,
         nextCursor:
           rows.length === ROW_LIMIT ? currentOffset + ROW_LIMIT : undefined,
+        totalCount: await TableService.getRowCount(ctx.db, ctx.table.id),
       };
     }),
 

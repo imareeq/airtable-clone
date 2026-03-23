@@ -46,9 +46,8 @@ export function Spreadsheet<
   activeCell,
   setActiveCell,
 }: SpreadsheetProps<TData, TValue>) {
-  const [contextRowIndex, setContextRowIndex] = useState<number | null>(null);
+  const [contextRowId, setContextRowId] = useState<string | null>(null);
   const [checkedRows, setCheckedRows] = useState<Set<string>>(new Set());
-  const [isScrollNearBottom, setIsScrollNearBottom] = useState(false);
   const tableRef = useRef<HTMLTableElement>(null);
   const headerRowRef = useRef<HTMLTableRowElement>(null);
   const utils = api.useUtils();
@@ -199,11 +198,38 @@ export function Spreadsheet<
   });
 
   const deleteRow = api.table.deleteRow.useMutation({
-    onSuccess: () => {
-      void utils.table.getRows.invalidate({ tableId: table.id });
+    onMutate: async ({ rowId }) => {
+      await utils.table.getRows.cancel({ tableId: table.id });
+
+      const previousData = utils.table.getRows.getInfiniteData({
+        tableId: table.id,
+      });
+
+      utils.table.getRows.setInfiniteData({ tableId: table.id }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            totalCount: page.totalCount - 1,
+            rows: page.rows.filter((row) => row.id !== rowId),
+          })),
+        };
+      });
+
+      return { previousData };
     },
-    onError: (error) => {
+    onError: (error, _vars, context) => {
+      if (context?.previousData) {
+        utils.table.getRows.setInfiniteData(
+          { tableId: table.id },
+          context.previousData,
+        );
+      }
       toast.error(`Failed to delete row: ${error.message}`);
+    },
+    onSettled: () => {
+      void utils.table.getRows.invalidate({ tableId: table.id });
     },
   });
 
@@ -247,9 +273,8 @@ export function Spreadsheet<
   return (
     <SpreadsheetContextMenu
       onDeleteRow={() => {
-        if (contextRowIndex === null) return;
-        const rowId = rows[contextRowIndex]?.original.id as string;
-        deleteRow.mutate({ tableId: table.id, rowId });
+        if (!contextRowId) return;
+        deleteRow.mutate({ tableId: table.id, rowId: contextRowId });
       }}
     >
       <Table
@@ -317,9 +342,7 @@ export function Spreadsheet<
                       checkedRows.has(row.original.id) && "bg-muted",
                     )}
                     data-state={row.getIsSelected() && "selected"}
-                    onContextMenu={() =>
-                      setContextRowIndex(row.original.row_number - 1)
-                    }
+                    onContextMenu={() => setContextRowId(row.original.id)}
                   >
                     <TableCell className="text-muted-foreground border-border group/row-cell w-21 border-l-0 text-center text-xs">
                       {!checkedRows.has(row.original.id) && (

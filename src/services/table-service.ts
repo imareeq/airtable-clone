@@ -6,7 +6,7 @@ import { ColumnType } from "generated/prisma";
 import { nanoid } from "nanoid";
 import type { SpreadsheetRow } from "~/server/api/routers/table";
 
-export const ROW_LIMIT = 50;
+export const ROW_LIMIT = 100;
 
 export const TableService = {
   async create(db: DBClient, baseId: string, name: string) {
@@ -134,5 +134,12 @@ export const TableService = {
         ...values,
       );
     }
+  },
+
+  async getRowCount(db: DBClient, tableId: string) {
+    const result = await db.$queryRawUnsafe<[{ count: bigint }]>(
+      `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}"`,
+    );
+    return Number(result[0]?.count ?? 0);
   },
 };
