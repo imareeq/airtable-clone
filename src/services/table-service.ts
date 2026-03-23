@@ -33,6 +33,7 @@ export const TableService = {
     const cols = [
       `"id"`,
       `"order_index"`,
+      `ROW_NUMBER() OVER (ORDER BY "order_index" ASC) AS "row_number"`,
       ...columnIds.map((id) => `"${id}"`),
     ].join(", ");
 

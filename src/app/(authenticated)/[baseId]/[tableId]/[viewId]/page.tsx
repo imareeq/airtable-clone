@@ -3,17 +3,38 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { ColumnType } from "generated/prisma";
 import { useParams } from "next/navigation";
+import { useRef, useState } from "react";
 import { ColumnHeader } from "~/components/column-header";
 import { Spreadsheet } from "~/components/spreadsheet";
 import { useTable } from "~/contexts/table-context";
 import type { SpreadsheetRow } from "~/server/api/routers/table";
 import { api } from "~/trpc/react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+
+export type ActiveCell = {
+  rowIndex: number;
+  colIndex: number;
+  mode: "selected" | "editing";
+  initialValue?: string;
+};
 
 export default function Page() {
   const { tableId } = useParams<{ tableId: string }>();
+  const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { columns: tableColumns } = useTable();
-
   const { data: rows = [] } = api.table.getRows.useQuery({ tableId });
+
+  const virtualizer = useVirtualizer({
+    count: rows?.length,
+    estimateSize: () => 32,
+    getScrollElement: () => scrollContainerRef.current,
+  });
+
+  const virtualRows = virtualizer.getVirtualItems();
+  const visibleRows = virtualRows
+    .map((virtualRow) => rows[virtualRow.index])
+    .filter(Boolean);
 
   const columns: ColumnDef<SpreadsheetRow>[] = tableColumns.map((col) => ({
     accessorKey: col.id,
@@ -29,5 +50,39 @@ export default function Page() {
     },
   }));
 
-  return <Spreadsheet columns={columns} data={rows as SpreadsheetRow[]} />;
+  return (
+    <div
+      onClick={() => setActiveCell(null)}
+      className="bg-muted h-full w-full outline-none focus:outline-none"
+    >
+      <div
+        ref={scrollContainerRef}
+        className="relative h-full w-full overflow-auto"
+      >
+        <div
+          style={{
+            height: virtualizer.getTotalSize(),
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              transform: `translateY(${virtualRows[0]?.start ?? 0}px)`,
+            }}
+          >
+            <Spreadsheet
+              columns={columns}
+              data={visibleRows as SpreadsheetRow[]}
+              activeCell={activeCell}
+              setActiveCell={setActiveCell}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

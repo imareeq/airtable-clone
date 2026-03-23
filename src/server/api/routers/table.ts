@@ -8,7 +8,11 @@ import {
 } from "~/server/api/trpc";
 import { TableService } from "~/services/table-service";
 
-export type SpreadsheetRow = { id: string } & Record<string, string>;
+export type SpreadsheetRow = {
+  id: string;
+  order_index: number;
+  row_number: number;
+} & Record<string, string>;
 
 export const TableRouter = createTRPCRouter({
   getById: tableProcedure.query(async ({ ctx }) => {
