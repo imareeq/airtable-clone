@@ -124,15 +124,29 @@ export const TableService = {
     const tableName = `spreadsheet_${tableId}`;
 
     const colNames = [`"id"`, ...columns.map((c) => `"${c.id}"`)].join(", ");
-    const rows = generateFakeRows(columns, numRows);
 
-    for (const row of rows) {
-      const values = [row.id, ...row.values];
-      const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
-      await db.$executeRawUnsafe(
-        `INSERT INTO "${tableName}" (${colNames}) VALUES (${placeholders})`,
-        ...values,
-      );
+    const numCols = columns.length + 1;
+    const BATCH_SIZE = Math.floor(65000 / numCols);
+
+    for (let i = 0; i < numRows; i += BATCH_SIZE) {
+      const currentBatchCount = Math.min(BATCH_SIZE, numRows - i);
+      const rows = generateFakeRows(columns, currentBatchCount, i);
+
+      const valuePlaceholders: string[] = [];
+      const flattenedValues: any[] = [];
+
+      for (const row of rows) {
+        const rowValues = [row.id, ...row.values];
+        const placeholders = rowValues
+          .map((_, valIndex) => `$${flattenedValues.length + valIndex + 1}`)
+          .join(", ");
+        valuePlaceholders.push(`(${placeholders})`);
+        flattenedValues.push(...rowValues);
+      }
+
+      const query = `INSERT INTO "${tableName}" (${colNames}) VALUES ${valuePlaceholders.join(", ")}`;
+
+      await db.$executeRawUnsafe(query, ...flattenedValues);
     }
   },
 
