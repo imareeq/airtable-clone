@@ -125,7 +125,7 @@ export default function Page() {
       void jumpToRow(index);
     },
     150,
-    { maxWait: 300 },
+    { maxWait: 500 },
   );
 
   useEffect(() => {
