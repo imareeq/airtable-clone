@@ -26,17 +26,19 @@ export const TableRouter = createTRPCRouter({
     .input(
       z.object({
         cursor: z.number().optional(),
+        offset: z.number().optional(),
       }),
     )
     .output(
       z.object({
         rows: z.array(SpreadsheetRowSchema),
         nextCursor: z.number().optional(),
+        prevCursor: z.number().optional(),
         totalCount: z.number(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const currentOffset = input.cursor ?? 0;
+      const currentOffset = input.offset ?? input.cursor ?? 0;
 
       const res = await TableService.getRows(
         ctx.db,
@@ -50,11 +52,21 @@ export const TableRouter = createTRPCRouter({
         row_number: currentOffset + index + 1,
       }));
 
+      const totalCount = await TableService.getRowCount(ctx.db, ctx.table.id);
+
+      const nextCursor =
+        currentOffset + rows.length < totalCount
+          ? currentOffset + rows.length
+          : undefined;
+
+      const prevCursor =
+        currentOffset > 0 ? Math.max(0, currentOffset - ROW_LIMIT) : undefined;
+
       return {
         rows,
-        nextCursor:
-          rows.length === ROW_LIMIT ? currentOffset + ROW_LIMIT : undefined,
-        totalCount: await TableService.getRowCount(ctx.db, ctx.table.id),
+        nextCursor,
+        prevCursor,
+        totalCount,
       };
     }),
 
