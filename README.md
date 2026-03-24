@@ -20,11 +20,11 @@ _T3 stack, Postgres, Google OAuth, base/table data model_
 _TanStack Table, editable cells, arrow/tab navigation_
 
 - [x] Integrate TanStack Table with server data; render rows + columns
-- [ ] Dynamic column add — Text and Number types with type-safe input rendering
-- [ ] Click-to-edit cells: inline input, optimistic update via tRPC `cell.upsert`
+- [x] Dynamic column add — Text and Number types with type-safe input rendering
+- [x] Click-to-edit cells: inline input, optimistic update via tRPC `cell.upsert`
 - [x] Keyboard nav: Arrow keys, Tab / Shift+Tab, Enter to commit, Esc to cancel — track active cell with React state; focus management on cell mount
 - [x] New table → seed with Faker.js default rows (10 rows, 4 columns)
-- [ ] Airtable visual pass: row numbers, column header styling, cell selection highlight, add-column `+` button
+- [x] Airtable visual pass: row numbers, column header styling, cell selection highlight, add-column `+` button
 
 **✓ End of day:** Fully interactive table — add columns, edit cells, navigate with keyboard
 
@@ -34,11 +34,10 @@ _TanStack Table, editable cells, arrow/tab navigation_
 
 _TanStack Virtualizer, tRPC cursor pagination, 100k seed button_
 
-- [ ] Switch data fetching to `useInfiniteQuery` with cursor-based pagination (fetch 100 rows/page)
-- [ ] Wrap table body in `@tanstack/react-virtual` — only render visible rows in DOM; use `overscan: 5` and fixed row height (34px) for performance
-- [ ] Intersection observer at bottom sentinel → auto-fetch next page as user scrolls
-- [ ] "Add 100k rows" button → background tRPC mutation using Postgres `INSERT ... SELECT generate_series` + Faker data, batched in chunks of 1000 inside a transaction
-- [ ] Add Postgres index on `(tableId, createdAt)` for cursor pagination
+- [x] Switch data fetching to `useInfiniteQuery` with cursor-based pagination (fetch 100 rows/page)
+- [x] Wrap table body in `@tanstack/react-virtual` — only render visible rows in DOM; use `overscan: 5` and fixed row height (34px) for performance
+- [x] "Add 100k rows" button → background tRPC mutation using Postgres `INSERT ... SELECT generate_series` + Faker data, batched in chunks of 1000 inside a transaction
+- [x] Add Postgres index on `(tableId, createdAt)` for cursor pagination
 - [ ] Skeleton loading rows while fetching next page
 
 **✓ End of day:** 100k rows scroll without lag; DOM stays lean; loading states visible
