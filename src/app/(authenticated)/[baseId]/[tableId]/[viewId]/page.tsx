@@ -11,6 +11,8 @@ import type { SpreadsheetRow } from "~/server/api/routers/table";
 import { api } from "~/trpc/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import SeedDataButton from "~/components/seed-data-button";
+import { useDebounceCallback } from "usehooks-ts";
+import { ROW_LIMIT } from "~/services/table-service";
 
 export type ActiveCell = {
   rowIndex: number;
@@ -23,23 +25,35 @@ export default function Page() {
   const table = useTable();
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { columns: tableColumns } = useTable();
+  const utils = api.useUtils();
+  const isJumping = useRef<boolean>(false);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    api.table.getRows.useInfiniteQuery(
-      { tableId: table.id },
-      {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-        initialCursor: undefined,
-      },
-    );
-
-  const rows = useMemo(
-    () => data?.pages.flatMap((page) => page.rows) ?? [],
-    [data],
+  const {
+    data,
+    fetchNextPage,
+    fetchPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
+    isFetching,
+  } = api.table.getRows.useInfiniteQuery(
+    { tableId: table.id },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      getPreviousPageParam: (firstPage) => firstPage.prevCursor,
+    },
   );
 
-  const totalCount = data?.pages[0]?.totalCount ?? rows.length ?? 0;
+  const totalCount = data?.pages[0]?.totalCount ?? 0;
+
+  const rows = useMemo(() => {
+    const arr = new Array(totalCount).fill(null);
+    data?.pages.forEach((page) => {
+      page.rows.forEach((row) => {
+        arr[row.row_number - 1] = row;
+      });
+    });
+    return arr;
+  }, [data, totalCount]);
 
   const virtualizer = useVirtualizer({
     count: totalCount,
@@ -49,11 +63,19 @@ export default function Page() {
   });
 
   const virtualRows = virtualizer.getVirtualItems();
-  const visibleRows = virtualRows
-    .map((virtualRow) => rows[virtualRow.index])
-    .filter(Boolean);
+  const visibleRows = useMemo(() => {
+    return virtualRows.map((virtualRow) => {
+      return (
+        rows[virtualRow.index] ?? {
+          id: `skeleton-${virtualRow.index}`,
+          row_number: virtualRow.index + 1,
+          isSkeleton: true,
+        }
+      );
+    });
+  }, [virtualRows, rows]);
 
-  const columns: ColumnDef<SpreadsheetRow>[] = tableColumns.map((col) => ({
+  const columns: ColumnDef<SpreadsheetRow>[] = table.columns.map((col) => ({
     accessorKey: col.id,
     meta: { type: col.type },
     header: () => <ColumnHeader column={col} />,
@@ -67,24 +89,64 @@ export default function Page() {
     },
   }));
 
+  const jumpToRow = async (rowNumber: number, colIndex = 0) => {
+    if (isJumping.current) return;
+
+    if (rows[rowNumber - 1]) {
+      virtualizer.scrollToIndex(rowNumber - 1, { align: "center" });
+      setActiveCell({ rowIndex: rowNumber - 1, colIndex, mode: "selected" });
+      return;
+    }
+
+    isJumping.current = true;
+
+    const offset = Math.floor((rowNumber - 1) / ROW_LIMIT) * ROW_LIMIT;
+    const jumpPage = await utils.table.getRows.fetch({
+      tableId: table.id,
+      cursor: offset,
+    });
+
+    utils.table.getRows.setInfiniteData({ tableId: table.id }, (prev) => {
+      if (!prev) return { pages: [jumpPage], pageParams: [offset] };
+      return {
+        pages: [...prev.pages, jumpPage],
+        pageParams: [...prev.pageParams, offset],
+      };
+    });
+
+    virtualizer.scrollToIndex(rowNumber - 1, { align: "center" });
+    setActiveCell({ rowIndex: rowNumber - 1, colIndex, mode: "selected" });
+
+    isJumping.current = false;
+  };
+
+  const debouncedJump = useDebounceCallback(
+    (index: number) => {
+      void jumpToRow(index);
+    },
+    150,
+    { maxWait: 300 },
+  );
+
   useEffect(() => {
     const virtualItems = virtualizer.getVirtualItems();
-    if (virtualItems.length === 0 || !hasNextPage || isFetchingNextPage) return;
+    if (virtualItems.length === 0 || isFetching) return;
 
-    const lastItem = virtualItems[virtualItems.length - 1]!;
+    const firstVisibleIdx = virtualItems[0]!.index;
+    const lastVisibleIdx = virtualItems[virtualItems.length - 1]!.index;
+    const buffer = 20;
 
-    const threshold = rows.length - 20;
-
-    if (lastItem.index >= threshold) {
-      void fetchNextPage();
+    if (!rows[firstVisibleIdx] && !isJumping.current) {
+      debouncedJump(firstVisibleIdx + 1);
+      return;
     }
-  }, [
-    virtualRows,
-    rows.length,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  ]);
+
+    if (hasNextPage && !rows[lastVisibleIdx + buffer]) {
+      void fetchNextPage();
+    } else if (hasPreviousPage && !rows[firstVisibleIdx - buffer]) {
+      void fetchPreviousPage();
+    }
+  }, [virtualRows, rows, isFetching]);
 
   return (
     <div
