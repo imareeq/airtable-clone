@@ -125,12 +125,19 @@ export const TableRouter = createTRPCRouter({
         }
       }
 
-      return TableService.updateCell(
+      await TableService.updateCell(
         ctx.db,
         ctx.table.id,
         input.rowId,
         input.columnId,
         input.value,
+      );
+
+      await TableService.updateSearchVector(
+        ctx.db,
+        ctx.table.id,
+        input.rowId,
+        ctx.table.columns.map((c) => c.id),
       );
     }),
 
