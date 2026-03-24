@@ -7,14 +7,19 @@ import { isValidNumberInput } from "~/lib/cell-utils";
 export function useEditingCell<TData extends { id: string }>(
   activeCell: ActiveCell | null,
   rows: Row<TData>[],
+  virtualStartIndex: number,
 ) {
-  const [editingValue, setEditingValue] = useState<string>("");
+  const [editingValue, setEditingValue] = useState<string>(
+    activeCell?.initialValue ?? "",
+  );
   const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeCell?.mode === "editing") {
       const cell =
-        rows[activeCell.rowIndex]?.getVisibleCells()[activeCell.colIndex];
+        rows[activeCell.rowIndex - virtualStartIndex]?.getVisibleCells()[
+          activeCell.colIndex
+        ];
       if (cell) {
         const columnType = (cell.column.columnDef.meta as { type: ColumnType })
           ?.type;

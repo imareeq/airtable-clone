@@ -10,7 +10,6 @@ import { useTable } from "~/contexts/table-context";
 import type { SpreadsheetRow } from "~/server/api/routers/table";
 import { api } from "~/trpc/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useInView } from "react-intersection-observer";
 import SeedDataButton from "~/components/seed-data-button";
 
 export type ActiveCell = {
@@ -117,6 +116,7 @@ export default function Page() {
               data={visibleRows as SpreadsheetRow[]}
               activeCell={activeCell}
               setActiveCell={setActiveCell}
+              totalRowCount={totalCount}
             />
           </div>
         </div>

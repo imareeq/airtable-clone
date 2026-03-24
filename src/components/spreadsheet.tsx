@@ -35,6 +35,7 @@ interface SpreadsheetProps<TData extends { id: string }, TValue> {
   data: TData[];
   activeCell: ActiveCell | null;
   setActiveCell: React.Dispatch<React.SetStateAction<ActiveCell | null>>;
+  totalRowCount: number;
 }
 
 export function Spreadsheet<
@@ -45,6 +46,7 @@ export function Spreadsheet<
   data,
   activeCell,
   setActiveCell,
+  totalRowCount,
 }: SpreadsheetProps<TData, TValue>) {
   const [contextRowId, setContextRowId] = useState<string | null>(null);
   const [checkedRows, setCheckedRows] = useState<Set<string>>(new Set());
@@ -64,7 +66,7 @@ export function Spreadsheet<
   const visibleCols = spreadsheet.getAllColumns();
 
   const { editingValue, setEditingValue, validationError, setValidationError } =
-    useEditingCell(activeCell, rows);
+    useEditingCell(activeCell, rows, (data[0]?.row_number ?? 0) - 1);
 
   const navigate = useCallback(
     (rowDelta: number, colDelta: number) => {
@@ -73,7 +75,7 @@ export function Spreadsheet<
         return {
           rowIndex: Math.max(
             0,
-            Math.min(rows.length - 1, prev.rowIndex + rowDelta),
+            Math.min(totalRowCount - 1, prev.rowIndex + rowDelta),
           ),
           colIndex: Math.max(
             0,
@@ -140,7 +142,7 @@ export function Spreadsheet<
       setActiveCell({
         rowIndex: Math.max(
           0,
-          Math.min(rows.length - 1, activeCell!.rowIndex + rowDelta),
+          Math.min(totalRowCount - 1, activeCell!.rowIndex + rowDelta),
         ),
         colIndex: Math.max(
           0,
