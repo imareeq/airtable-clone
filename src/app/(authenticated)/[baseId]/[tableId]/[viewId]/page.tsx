@@ -89,35 +89,48 @@ export default function Page() {
     },
   }));
 
-  const jumpToRow = async (rowNumber: number, colIndex = 0) => {
+  const jumpToRow = async (
+    rowNumber: number,
+    options: { shouldScroll?: boolean; colIndex?: number } = {},
+  ) => {
+    const { shouldScroll = false, colIndex = 0 } = options;
+
     if (isJumping.current) return;
 
+    // 1. If we already have the data, just move the UI
     if (rows[rowNumber - 1]) {
-      virtualizer.scrollToIndex(rowNumber - 1, { align: "center" });
+      if (shouldScroll) {
+        virtualizer.scrollToIndex(rowNumber - 1, { align: "center" });
+      }
       setActiveCell({ rowIndex: rowNumber - 1, colIndex, mode: "selected" });
       return;
     }
 
     isJumping.current = true;
 
-    const offset = Math.floor((rowNumber - 1) / ROW_LIMIT) * ROW_LIMIT;
-    const jumpPage = await utils.table.getRows.fetch({
-      tableId: table.id,
-      cursor: offset,
-    });
+    try {
+      const offset = Math.floor((rowNumber - 1) / ROW_LIMIT) * ROW_LIMIT;
+      const jumpPage = await utils.table.getRows.fetch({
+        tableId: table.id,
+        cursor: offset,
+      });
 
-    utils.table.getRows.setInfiniteData({ tableId: table.id }, (prev) => {
-      if (!prev) return { pages: [jumpPage], pageParams: [offset] };
-      return {
-        pages: [...prev.pages, jumpPage],
-        pageParams: [...prev.pageParams, offset],
-      };
-    });
+      utils.table.getRows.setInfiniteData(
+        { tableId: table.id },
+        {
+          pages: [jumpPage],
+          pageParams: [offset],
+        },
+      );
 
-    virtualizer.scrollToIndex(rowNumber - 1, { align: "center" });
-    setActiveCell({ rowIndex: rowNumber - 1, colIndex, mode: "selected" });
+      if (shouldScroll) {
+        virtualizer.scrollToIndex(rowNumber - 1, { align: "center" });
+      }
 
-    isJumping.current = false;
+      setActiveCell({ rowIndex: rowNumber - 1, colIndex, mode: "selected" });
+    } finally {
+      isJumping.current = false;
+    }
   };
 
   const debouncedJump = useDebounceCallback(

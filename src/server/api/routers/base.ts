@@ -18,7 +18,7 @@ export const BaseRouter = createTRPCRouter({
 
   create: protectedProcedure
     .input(
-      z.object({ name: z.string(), color: z.nativeEnum(BaseColor).optional() }),
+      z.object({ name: z.string(), color: z.enum(BaseColor).optional() }),
     )
     .mutation(async ({ ctx, input }) => {
       return ctx.db.$transaction(async (tx) => {
@@ -31,7 +31,7 @@ export const BaseRouter = createTRPCRouter({
       z.object({
         baseId: z.string(),
         name: z.string().optional(),
-        color: z.nativeEnum(BaseColor).optional(),
+        color: z.enum(BaseColor).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
