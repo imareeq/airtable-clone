@@ -127,7 +127,7 @@ export function ViewSidebar({
               <DropdownMenuContent
                 side="right"
                 align="start"
-                className="w-52 p-1"
+                className="w-60 p-3"
               >
                 {VIEW_TYPES.map((type, i) =>
                   "separator" in type ? (
@@ -136,7 +136,7 @@ export function ViewSidebar({
                     <DropdownMenuItem
                       key={type.label}
                       disabled={type.on}
-                      className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px]"
+                      className="flex items-center gap-2.5 rounded-md p-2 text-[13px]"
                       onClick={() => {
                         if (type.on) return;
                         if (type.label !== "Grid") return;

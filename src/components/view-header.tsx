@@ -3,7 +3,6 @@
 import {
   EyeSlashIcon,
   FunnelSimpleIcon,
-  SquaresFourIcon,
   ArrowsDownUpIcon,
   MagnifyingGlassIcon,
   ListIcon,
@@ -13,6 +12,16 @@ import {
   TextAlignJustifyIcon,
   PaintBucketIcon,
   ListBulletsIcon,
+  UsersThreeIcon,
+  ArrowRightIcon,
+  PencilSimpleIcon,
+  InfoIcon,
+  CopyIcon,
+  GearIcon,
+  PrinterIcon,
+  TrashIcon,
+  ArrowCircleDownIcon,
+  CaretRightIcon,
 } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import {
@@ -20,9 +29,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
+import { Badge } from "./ui/badge";
 import { useSidebar } from "./ui/sidebar";
-import { useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { api } from "~/trpc/react";
+import { useTable } from "~/contexts/table-context";
+import { useView } from "~/contexts/view-context";
 
 const toolbarItems = [
   { icon: <EyeSlashIcon className="size-4" />, label: "Hide fields" },
@@ -35,8 +49,82 @@ const toolbarItems = [
   { icon: <MagnifyingGlassIcon className="size-4" />, label: null },
 ];
 
+const VIEW_MENU_ITEMS = [
+  {
+    icon: <UsersThreeIcon className="size-4" />,
+    label: "Collaborative view",
+    description: "Editors and up can edit the view configuration",
+    chevron: true,
+    separator: false,
+  },
+  {
+    icon: <ArrowRightIcon className="size-4" />,
+    label: "Assign as personal view",
+    pro: true,
+    separator: true,
+  },
+  {
+    icon: <PencilSimpleIcon className="size-4" />,
+    label: "Rename view",
+    separator: false,
+  },
+  {
+    icon: <InfoIcon className="size-4" />,
+    label: "Edit view description",
+    separator: true,
+  },
+  {
+    icon: <CopyIcon className="size-4" />,
+    label: "Duplicate view",
+    separator: false,
+  },
+  {
+    icon: <GearIcon className="size-4" />,
+    label: "Copy another view's configuration",
+    separator: true,
+  },
+  {
+    icon: <ArrowCircleDownIcon className="size-4" />,
+    label: "Download CSV",
+    separator: false,
+  },
+  {
+    icon: <PrinterIcon className="size-4" />,
+    label: "Print view",
+    separator: false,
+  },
+  {
+    icon: <TrashIcon className="size-4" />,
+    label: "Delete view",
+    destructive: true,
+    separator: false,
+  },
+] as const;
+
 export default function ViewHeader() {
   const { toggleSidebar } = useSidebar();
+  const { baseId, tableId, viewId } = useParams<{
+    baseId: string;
+    tableId: string;
+    viewId: string;
+  }>();
+  const router = useRouter();
+  const utils = api.useUtils();
+
+  const deleteView = api.view.delete.useMutation({
+    onSuccess: () => {
+      router.push(`/${baseId}/${tableId}`);
+      utils.view.getById.invalidate({ viewId });
+      router.refresh();
+    },
+  });
+
+  const handleMenuClick = (label: string) => {
+    if (label === "Delete view") {
+      deleteView.mutate({ viewId });
+    }
+  };
+
   return (
     <div className="bg-background border-border flex h-12 w-full flex-row items-center justify-between border-b px-2">
       <div className="flex items-center gap-0.5">
@@ -61,15 +149,50 @@ export default function ViewHeader() {
               <CaretDownIcon size={11} />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuItem className="text-xs">
-              <TableIcon
-                size={14}
-                weight="fill"
-                className="mr-2 text-blue-500"
-              />
-              Grid view
-            </DropdownMenuItem>
+          <DropdownMenuContent align="start" className="w-88 space-y-2 p-3">
+            {VIEW_MENU_ITEMS.map((item, i) => (
+              <>
+                {"description" in item ? (
+                  <DropdownMenuItem
+                    key={item.label}
+                    className="flex flex-col items-start gap-0.5 rounded-md p-2 text-[13px]"
+                  >
+                    <div className="flex w-full items-center gap-2">
+                      {item.icon}
+                      <span className="flex-1 font-medium">{item.label}</span>
+                      {"chevron" in item && (
+                        <CaretRightIcon className="text-muted-foreground size-3.5" />
+                      )}
+                    </div>
+                    <span className="text-muted-foreground pl-6 text-[12px] font-normal">
+                      {item.description}
+                    </span>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    key={item.label}
+                    className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px]"
+                    onClick={() => handleMenuClick(item.label)}
+                  >
+                    {item.icon}
+                    <span
+                      className={`flex-1 ${"destructive" in item ? "text-rose-500" : ""}`}
+                    >
+                      {item.label}
+                    </span>
+                    {"pro" in item && (
+                      <Badge
+                        variant="secondary"
+                        className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-600"
+                      >
+                        ✦ Team
+                      </Badge>
+                    )}
+                  </DropdownMenuItem>
+                )}
+                {item.separator && <DropdownMenuSeparator key={`sep-${i}`} />}
+              </>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -88,11 +211,5 @@ export default function ViewHeader() {
         ))}
       </div>
     </div>
-  );
-}
-
-export function ViewHeaderSkeletion() {
-  return (
-    <div className="bg-background border-border flex h-12 w-full flex-row items-center justify-between border-b px-2"></div>
   );
 }
