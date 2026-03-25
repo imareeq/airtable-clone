@@ -21,9 +21,7 @@ import { Button } from "./ui/button";
 import { PlusIcon } from "@phosphor-icons/react";
 import { api } from "~/trpc/react";
 import { CreateColumnPopover } from "./create-column-popover";
-import { toast } from "sonner";
 import { useTable } from "~/contexts/table-context";
-import { useRouter } from "next/navigation";
 import SpreadsheetContextMenu from "./spreadsheet-context-menu";
 import { ColumnType } from "generated/prisma";
 import type { ActiveCell } from "~/app/(authenticated)/[baseId]/[tableId]/[viewId]/page";
@@ -301,6 +299,60 @@ export function Spreadsheet<
                         activeCell?.colIndex === colIndex;
                       const isEditing =
                         isSelected && activeCell?.mode === "editing";
+                      const columnType = (
+                        cell.column.columnDef.meta as { type: ColumnType }
+                      )?.type;
+
+                      const handleChange = (val: string) => {
+                        if (
+                          columnType === ColumnType.NUMBER &&
+                          !isValidNumberInput(val)
+                        ) {
+                          setValidationError("please enter a number");
+                        } else {
+                          setEditingValue(val);
+                          setValidationError(null);
+                        }
+                      };
+
+                      const handleBlur = (val: string) => {
+                        if (!validateValue(val, columnType)) {
+                          updateCell.mutate({
+                            tableId: table.id,
+                            rowId: row.original.id,
+                            columnId: cell.column.id,
+                            value: val,
+                          });
+                        }
+                        exitEditing();
+                      };
+
+                      const handleKeyDown = (
+                        e: React.KeyboardEvent,
+                        val: string,
+                      ) => {
+                        if (e.key === "Enter" || e.key === "Tab") {
+                          if (validateValue(val, columnType)) {
+                            e.preventDefault();
+                            return;
+                          }
+                          updateCell.mutate({
+                            tableId: table.id,
+                            rowId: row.original.id,
+                            columnId: cell.column.id,
+                            value: val,
+                          });
+                        }
+                        handleCellKeyDown(e);
+                      };
+
+                      const handleClick = () => {
+                        tableRef.current?.focus({ preventScroll: true });
+                        setActiveCell({ rowIndex, colIndex, mode: "selected" });
+                      };
+
+                      const handleDoubleClick = () =>
+                        setActiveCell({ rowIndex, colIndex, mode: "editing" });
 
                       return (
                         <TableCell
@@ -309,133 +361,39 @@ export function Spreadsheet<
                             "border-border relative w-44 border-r p-0",
                             isSelected && "z-10",
                           )}
-                          onClick={() => {
-                            tableRef.current?.focus({
-                              preventScroll: true,
-                            });
-                            setActiveCell({
-                              rowIndex,
-                              colIndex,
-                              mode: "selected",
-                            });
-                          }}
-                          onDoubleClick={() =>
-                            setActiveCell({
-                              rowIndex,
-                              colIndex,
-                              mode: "editing",
-                            })
-                          }
+                          onClick={handleClick}
+                          onDoubleClick={handleDoubleClick}
                         >
                           {isSelected && (
-                            <div
-                              className="pointer-events-none absolute inset-0 z-30"
-                              style={{
-                                boxShadow: [
-                                  colIndex !== 0 &&
-                                    "inset 2px 0 0 0 var(--color-primary)",
-                                  rowIndex !== 0 &&
-                                    "inset 0 2px 0 0 var(--color-primary)",
-                                  "inset -2px 0 0 0 var(--color-primary)",
-                                  "inset 0 -2px 0 0 var(--color-primary)",
-                                ]
-                                  .filter(Boolean)
-                                  .join(", "),
-                              }}
+                            <CellSelectionOverlay
+                              rowIndex={rowIndex}
+                              colIndex={colIndex}
                             />
                           )}
 
                           {isEditing ? (
                             <div className="relative h-full w-full">
-                              <input
-                                autoFocus
+                              <CellEditingInput
                                 value={editingValue}
-                                onChange={(e) => {
-                                  const newValue = e.target.value;
-                                  const columnType = (
-                                    cell.column.columnDef.meta as {
-                                      type: ColumnType;
-                                    }
-                                  )?.type;
-
-                                  if (
-                                    columnType === ColumnType.NUMBER &&
-                                    !isValidNumberInput(newValue)
-                                  ) {
-                                    setValidationError("please enter a number");
-                                  } else {
-                                    setEditingValue(newValue);
-                                    setValidationError(null);
-                                  }
-                                }}
-                                onClick={() =>
-                                  handleCellClick(rowIndex, colIndex)
-                                }
-                                onDoubleClick={() =>
-                                  handleCellDoubleClick(rowIndex, colIndex)
-                                }
-                                onBlur={(e) => {
-                                  const columnType = (
-                                    cell.column.columnDef.meta as {
-                                      type: ColumnType;
-                                    }
-                                  )?.type;
-                                  const error = validateValue(
-                                    e.target.value,
-                                    columnType,
-                                  );
-                                  if (!error) {
-                                    updateCell.mutate({
-                                      tableId: table.id,
-                                      rowId: row.original.id,
-                                      columnId: cell.column.id,
-                                      value: e.target.value,
-                                    });
-                                  }
-
-                                  handleCellBlur();
-                                }}
-                                onKeyDown={(e) => {
-                                  const columnType = (
-                                    cell.column.columnDef.meta as {
-                                      type: ColumnType;
-                                    }
-                                  )?.type;
-                                  if (e.key === "Enter" || e.key === "Tab") {
-                                    const value = (e.target as HTMLInputElement)
-                                      .value;
-                                    const error = validateValue(
-                                      value,
-                                      columnType,
-                                    );
-                                    if (error) {
-                                      e.preventDefault();
-                                      return;
-                                    }
-                                    updateCell.mutate({
-                                      tableId: table.id,
-                                      rowId: row.original.id,
-                                      columnId: cell.column.id,
-                                      value: value,
-                                    });
-                                  }
-                                  handleCellKeyDown(e);
-                                }}
-                                className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                onKeyDown={handleKeyDown}
+                                onClick={handleClick}
+                                onDoubleClick={handleDoubleClick}
                               />
                               {validationError && (
-                                <div className="bg-bacgrkound text-foreground absolute top-full -left-px z-50 flex h-8 w-[calc(100%+2px)] items-center px-2 text-right text-xs text-[12px] shadow-lg">
-                                  {validationError}
-                                </div>
+                                <CellValidationError
+                                  message={validationError}
+                                />
                               )}
                             </div>
                           ) : (
-                            <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
+                            <CellDisplay>
                               {flexRender(
                                 cell.column.columnDef.cell,
                                 cell.getContext(),
                               )}
-                            </div>
+                            </CellDisplay>
                           )}
                         </TableCell>
                       );
@@ -461,5 +419,74 @@ export function Spreadsheet<
         </TableBody>
       </Table>
     </SpreadsheetContextMenu>
+  );
+}
+
+function CellSelectionOverlay({
+  rowIndex,
+  colIndex,
+}: {
+  rowIndex: number;
+  colIndex: number;
+}) {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 z-30"
+      style={{
+        boxShadow: [
+          colIndex !== 0 && "inset 2px 0 0 0 var(--color-primary)",
+          rowIndex !== 0 && "inset 0 2px 0 0 var(--color-primary)",
+          "inset -2px 0 0 0 var(--color-primary)",
+          "inset 0 -2px 0 0 var(--color-primary)",
+        ]
+          .filter(Boolean)
+          .join(", "),
+      }}
+    />
+  );
+}
+
+function CellEditingInput({
+  value,
+  onChange,
+  onBlur,
+  onKeyDown,
+  onClick,
+  onDoubleClick,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur: (value: string) => void;
+  onKeyDown: (e: React.KeyboardEvent, value: string) => void;
+  onClick: () => void;
+  onDoubleClick: () => void;
+}) {
+  return (
+    <input
+      autoFocus
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onBlur={(e) => onBlur(e.target.value)}
+      onKeyDown={(e) => onKeyDown(e, (e.target as HTMLInputElement).value)}
+      onClick={onClick}
+      onDoubleClick={onDoubleClick}
+      className="absolute inset-0 z-20 h-full w-full bg-white px-2 text-[13px] outline-none"
+    />
+  );
+}
+
+function CellValidationError({ message }: { message: string }) {
+  return (
+    <div className="bg-background text-foreground absolute top-full -left-px z-50 flex h-8 w-[calc(100%+2px)] items-center px-2 text-right text-[12px] shadow-lg">
+      {message}
+    </div>
+  );
+}
+
+function CellDisplay({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex h-8 w-full items-center truncate px-2 text-[13px]">
+      {children}
+    </div>
   );
 }
