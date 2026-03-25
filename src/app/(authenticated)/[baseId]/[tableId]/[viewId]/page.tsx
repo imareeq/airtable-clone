@@ -97,7 +97,6 @@ export default function Page() {
 
     if (isJumping.current) return;
 
-    // 1. If we already have the data, just move the UI
     if (rows[rowNumber - 1]) {
       if (shouldScroll) {
         virtualizer.scrollToIndex(rowNumber - 1, { align: "center" });
