@@ -36,6 +36,7 @@ import { useTable } from "~/contexts/table-context";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useSpreadsheetMutations } from "~/hooks/use-spreadsheet-mutation";
 
 const columnTypeIcon: Record<ColumnType, ReactNode> = {
   [ColumnType.TEXT]: <TextAaIcon className="size-4" />,
@@ -54,19 +55,9 @@ type MenuItem =
   | { separator: true };
 
 export function ColumnHeader({ column }: { column: Column }) {
-  const router = useRouter();
-  const utils = api.useUtils();
   const table = useTable();
 
-  const deleteColumn = api.column.delete.useMutation({
-    onSuccess: () => {
-      router.refresh();
-      void utils.table.getRows.invalidate({ tableId: table.id });
-    },
-    onError: (error) => {
-      toast.error(`Failed to delete field: ${error.message}`);
-    },
-  });
+  const { deleteCol } = useSpreadsheetMutations(table.id);
 
   const menuItems: MenuItem[] = [
     { label: "Edit field", icon: PencilSimpleIcon },
@@ -101,7 +92,7 @@ export function ColumnHeader({ column }: { column: Column }) {
       label: "Delete field",
       icon: TrashIcon,
       destructive: true,
-      onClick: () => deleteColumn.mutate({ columnId: column.id }),
+      onClick: () => deleteCol.mutate({ columnId: column.id }),
     },
   ];
 

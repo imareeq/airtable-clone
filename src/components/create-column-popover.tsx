@@ -24,29 +24,14 @@ import {
 } from "~/components/ui/select";
 import { ColumnType } from "generated/prisma";
 import { useTable } from "~/contexts/table-context";
-import { api } from "~/trpc/react";
-import { useRouter, useParams } from "next/navigation";
-import { toast } from "sonner";
+import { useSpreadsheetMutations } from "~/hooks/use-spreadsheet-mutation";
 
 export function CreateColumnPopover() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState<ColumnType>(ColumnType.TEXT);
-
   const table = useTable();
-  const router = useRouter();
-  const utils = api.useUtils();
-  const { tableId } = useParams<{ tableId: string }>();
-
-  const createCol = api.column.create.useMutation({
-    onSuccess: () => {
-      router.refresh();
-      void utils.table.getRows.invalidate({ tableId });
-    },
-    onError: (error) => {
-      toast.error(`Failed to create column: ${error.message}`);
-    },
-  });
+  const { createCol } = useSpreadsheetMutations(table.id);
 
   const handleCreate = () => {
     createCol.mutate({
