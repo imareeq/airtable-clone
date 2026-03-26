@@ -35,14 +35,15 @@ import {
 import { Badge } from "./ui/badge";
 import { useSidebar } from "./ui/sidebar";
 import { useParams, useRouter } from "next/navigation";
-import { api } from "~/trpc/react";
-import { useView } from "~/contexts/view-context";
 import { useTable } from "~/contexts/table-context";
 import { useSearch } from "~/contexts/table-search-context";
 import { useState } from "react";
 import { Input } from "./ui/input";
 import { useViewMutations } from "~/hooks/use-view-mutation";
 import { useDebounceCallback } from "usehooks-ts";
+import { HideFieldsPopover } from "./hide-fields-popover";
+import { useView } from "~/hooks/use-view";
+import { cn } from "~/lib/utils";
 
 const VIEW_MENU_ITEMS = [
   {
@@ -99,7 +100,7 @@ const VIEW_MENU_ITEMS = [
 export default function ViewHeader() {
   const { toggleSidebar } = useSidebar();
   const [searchOpen, setSearchOpen] = useState(false);
-  const { baseId, tableId, viewId } = useParams<{
+  const { tableId, viewId } = useParams<{
     baseId: string;
     tableId: string;
     viewId: string;
@@ -113,8 +114,23 @@ export default function ViewHeader() {
     setSearch(value);
   }, 300);
 
+  const hiddenCount = Array.isArray(view.hiddenColumns)
+    ? (view.hiddenColumns as string[]).length
+    : 0;
+
   const toolbarItems = [
-    { icon: <EyeSlashIcon className="size-4" />, label: "Hide fields" },
+    {
+      icon: <EyeSlashIcon className="size-4" />,
+      label:
+        hiddenCount > 0
+          ? `${hiddenCount} ${hiddenCount === 1 ? "field" : "fields"} hidden`
+          : "Hide fields",
+      className:
+        hiddenCount > 0
+          ? "bg-primary/20! hover:bg-primary/20! hover:border hover:border-primary/50"
+          : "",
+      popover: "hide-fields",
+    },
     { icon: <FunnelSimpleIcon className="size-4" />, label: "Filter" },
     { icon: <ListBulletsIcon className="size-4" />, label: "Group" },
     { icon: <ArrowsDownUpIcon className="size-4" />, label: "Sort" },
@@ -208,18 +224,29 @@ export default function ViewHeader() {
       </div>
 
       <div className="flex items-center gap-0.5">
-        {toolbarItems.map((item, i) => (
-          <Button
-            key={i}
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-muted-foreground flex h-7 items-center gap-1.5 rounded-sm px-2 text-[13px] font-normal"
-            onClick={item.onClick}
-          >
-            {item.icon}
-            {item.label && <span>{item.label}</span>}
-          </Button>
-        ))}
+        {toolbarItems.map((item, i) => {
+          const button = (
+            <Button
+              key={i}
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "flex h-7 items-center gap-1.5 rounded-sm px-2 text-[13px] font-normal text-black/70",
+                item.className,
+              )}
+              onClick={item.onClick}
+            >
+              {item.icon}
+              {item.label && <span>{item.label}</span>}
+            </Button>
+          );
+
+          if (item.popover === "hide-fields") {
+            return <HideFieldsPopover key={i}>{button}</HideFieldsPopover>;
+          }
+
+          return button;
+        })}
         {searchOpen && (
           <div className="border-border bg-background absolute top-full right-2 z-50 flex h-9.5 w-91.5 items-center gap-2 rounded-md rounded-t-none border shadow-md">
             <Input

@@ -36,7 +36,6 @@ import { Badge } from "./ui/badge";
 import { useTable } from "~/contexts/table-context";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "~/lib/utils";
-import { api } from "~/trpc/react";
 import { CreateViewForm } from "./create-view-dialogue";
 import { ViewContextMenu } from "./view-context-menu";
 import { useViewMutations } from "~/hooks/use-view-mutation";

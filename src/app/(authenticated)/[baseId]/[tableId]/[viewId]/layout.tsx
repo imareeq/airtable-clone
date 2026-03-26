@@ -3,8 +3,7 @@ import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import ViewHeader from "~/components/view-header";
 import { ViewSidebar } from "~/components/view-sidebar";
 import { TableSearchProvider } from "~/contexts/table-search-context";
-import { ViewProvider } from "~/contexts/view-context";
-import { api } from "~/trpc/server";
+import { api, HydrateClient } from "~/trpc/server";
 
 export default async function ViewLayout({
   children,
@@ -14,10 +13,10 @@ export default async function ViewLayout({
   params: Promise<{ baseId: string; tableId: string; viewId: string }>;
 }) {
   const { viewId } = await params;
-  const view = await api.view.getById({ viewId });
+  void api.view.getById.prefetch({ viewId });
 
   return (
-    <ViewProvider view={view}>
+    <HydrateClient>
       <SidebarProvider className="relative flex h-full min-h-0 w-full flex-col overflow-hidden">
         <TableSearchProvider>
           <ViewHeader />
@@ -33,6 +32,6 @@ export default async function ViewLayout({
           </div>
         </TableSearchProvider>
       </SidebarProvider>
-    </ViewProvider>
+    </HydrateClient>
   );
 }

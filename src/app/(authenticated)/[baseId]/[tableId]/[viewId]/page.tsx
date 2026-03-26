@@ -2,7 +2,6 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { ColumnType } from "generated/prisma";
-import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ColumnHeader } from "~/components/column-header";
 import { Spreadsheet } from "~/components/spreadsheet";
@@ -14,6 +13,8 @@ import SeedDataButton from "~/components/seed-data-button";
 import { useDebounceCallback } from "usehooks-ts";
 import { ROW_LIMIT } from "~/services/table-service";
 import { useSearch } from "~/contexts/table-search-context";
+import { useParams } from "next/navigation";
+import { useView } from "~/hooks/use-view";
 
 export type ActiveCell = {
   rowIndex: number;
@@ -77,19 +78,27 @@ export default function Page() {
     });
   }, [virtualRows, rows]);
 
-  const columns: ColumnDef<SpreadsheetRow>[] = table.columns.map((col) => ({
-    accessorKey: col.id,
-    meta: { type: col.type },
-    header: () => <ColumnHeader column={col} />,
-    cell: ({ getValue }) => {
-      const value = getValue<string>();
-      if (col.type === ColumnType.NUMBER && value !== "" && value != null) {
-        const num = Number(value);
-        return isNaN(num) ? value : num.toLocaleString();
-      }
-      return value;
-    },
-  }));
+  const view = useView();
+
+  const hiddenColumns = Array.isArray(view?.hiddenColumns)
+    ? (view.hiddenColumns as string[])
+    : [];
+
+  const columns: ColumnDef<SpreadsheetRow>[] = table.columns
+    .filter((col) => !hiddenColumns.includes(col.id))
+    .map((col) => ({
+      accessorKey: col.id,
+      meta: { type: col.type },
+      header: () => <ColumnHeader column={col} />,
+      cell: ({ getValue }) => {
+        const value = getValue<string>();
+        if (col.type === ColumnType.NUMBER && value !== "" && value != null) {
+          const num = Number(value);
+          return isNaN(num) ? value : num.toLocaleString();
+        }
+        return value;
+      },
+    }));
 
   const jumpToRow = async (
     rowNumber: number,

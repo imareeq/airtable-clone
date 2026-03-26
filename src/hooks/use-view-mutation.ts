@@ -28,12 +28,22 @@ export function useViewMutations(baseId: string, tableId: string) {
   });
 
   const updateView = api.view.update.useMutation({
-    onSuccess: async () => {
-      await utils.view.getById.invalidate();
-      router.refresh();
+    onMutate: async (input) => {
+      await utils.view.getById.cancel({ viewId: input.viewId });
+      const previous = utils.view.getById.getData({ viewId: input.viewId });
+      utils.view.getById.setData({ viewId: input.viewId }, (old) =>
+        old ? { ...old, ...input } : old,
+      );
+      return { previous };
     },
-    onError: (error) => {
-      toast.error(`Failed to rename view: ${error.message}`);
+    onError: (error, input, context) => {
+      if (context?.previous) {
+        utils.view.getById.setData({ viewId: input.viewId }, context.previous);
+      }
+      toast.error(`Failed to update view: ${error.message}`);
+    },
+    onSettled: async (_data, _error, input) => {
+      await utils.view.getById.invalidate({ viewId: input.viewId });
     },
   });
 

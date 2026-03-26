@@ -81,8 +81,14 @@ export function ColumnHeader({ column }: { column: Column }) {
       ),
     },
     { separator: true },
-    { label: "Sort A → Z", icon: ArrowUpIcon },
-    { label: "Sort Z → A", icon: ArrowDownIcon },
+    {
+      label: column.type === ColumnType.NUMBER ? "Sort 1 → 9" : "Sort A → Z",
+      icon: ArrowUpIcon,
+    },
+    {
+      label: column.type === ColumnType.NUMBER ? "Sort 9 → 1" : "Sort Z → A",
+      icon: ArrowDownIcon,
+    },
     { separator: true },
     { label: "Filter by this field", icon: FunnelSimpleIcon },
     { label: "Group by this field", icon: SquaresFourIcon },
