@@ -2,10 +2,10 @@
 
 import { TableTabs } from "./table-tabs";
 import { useParams } from "next/navigation";
-import { useBase } from "~/contexts/base-context";
 import { cn } from "~/lib/utils";
 import { getBaseAccentColorClass, isBaseColorLight } from "~/lib/color-utils";
 import TableNavToolsDropdown from "./table-nav-tools-dropdown";
+import { useBase } from "~/hooks/use-base";
 
 export default function TableNav() {
   const { tableId } = useParams<{ baseId: string; tableId: string }>();

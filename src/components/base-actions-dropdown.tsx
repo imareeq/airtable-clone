@@ -23,6 +23,7 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import type { Icon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
+import { useBaseMutations } from "~/hooks/use-base-mutations";
 
 export type BaseActionItem =
   | "rename"
@@ -81,16 +82,7 @@ export default function BaseActionsDropdown({
   variant = "outline",
   className,
 }: BaseActionsDropdownProps) {
-  const utils = api.useUtils();
-  const router = useRouter();
-
-  const deleteBase = api.base.delete.useMutation({
-    onSuccess: async () => {
-      await utils.base.getAll.invalidate();
-      onDeleteRedirect && router.push("/");
-    },
-    onError: (error) => toast.error(`Failed to delete base: ${error.message}`),
-  });
+  const { deleteBase } = useBaseMutations(baseId);
 
   const handleDelete = () => deleteBase.mutate({ baseId });
 

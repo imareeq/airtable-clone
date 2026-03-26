@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import { PlusIcon } from "@phosphor-icons/react";
 import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
-import { useBase } from "~/contexts/base-context";
 import TableActionsDropdown from "./table-actions-dropdown";
 import { useTableMutations } from "~/hooks/use-table-mutations";
+import { useBase } from "~/hooks/use-base";
 
 interface TableTabsProps {
   activeTableId: string;

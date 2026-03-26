@@ -3,6 +3,7 @@ import * as z from "zod";
 import { useForm } from "@tanstack/react-form";
 import { api } from "~/trpc/react";
 import { Input } from "./ui/input";
+import { useBaseMutations } from "~/hooks/use-base-mutations";
 
 const RenameBaseSchema = z.object({
   name: z.string().min(1, "Base name cannot be empty"),
@@ -21,12 +22,7 @@ export default function RenameBaseForm({
 }: RenameBaseFormProps) {
   const utils = api.useUtils();
 
-  const updateBaseName = api.base.update.useMutation({
-    onSuccess: async (_, variables) => {
-      await utils.base.getAll.invalidate();
-      await utils.base.getById.invalidate({ baseId: variables.baseId });
-    },
-  });
+  const { updateBase } = useBaseMutations(baseId);
 
   const form = useForm({
     validators: {
@@ -36,7 +32,7 @@ export default function RenameBaseForm({
       name: baseName,
     },
     onSubmit: async ({ value }) =>
-      updateBaseName.mutate({
+      updateBase.mutate({
         baseId: baseId,
         name: value.name,
       }),

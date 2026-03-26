@@ -15,7 +15,7 @@ import AirtablePlusFillIcon from "./airtable-plus-fill-icon";
 import { useIsMobile } from "~/hooks/use-mobile";
 import { cn } from "~/lib/utils";
 import { getBaseColorClass } from "~/lib/color-utils";
-import { useBase } from "~/contexts/base-context";
+import { useBase } from "~/hooks/use-base";
 
 export default function AppHeader() {
   const base = useBase();

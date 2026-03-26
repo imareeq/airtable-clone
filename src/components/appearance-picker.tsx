@@ -9,6 +9,7 @@ import { Button } from "./ui/button";
 import { BaseColor } from "../../generated/prisma";
 import { getBaseColorClass } from "~/lib/color-utils";
 import { useRouter } from "next/navigation";
+import { useBaseMutations } from "~/hooks/use-base-mutations";
 
 export const COLORS = [
   { id: BaseColor.PINK_LIGHT },
@@ -42,23 +43,8 @@ export default function AppearancePicker({
 }) {
   const [tab, setTab] = useState<"color" | "icon">("color");
   const [selectedColor, setSelectedColor] = useState(initialColor);
-  const utils = api.useUtils();
-  const router = useRouter();
 
-  const updateBase = api.base.update.useMutation({
-    onMutate: ({ color }) => {
-      setSelectedColor(color as BaseColor);
-    },
-    onError: (error, _vars, context) => {
-      setSelectedColor(initialColor);
-      toast.error(`Failed to update color: ${error.message}`);
-    },
-    onSettled: async () => {
-      await utils.base.getById.invalidate({ baseId });
-      await utils.base.getAll.invalidate();
-      router.refresh();
-    },
-  });
+  const { updateBase } = useBaseMutations(baseId);
 
   const handleColorChange = (colorId: BaseColor) => {
     if (colorId === selectedColor) return;
