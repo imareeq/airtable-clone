@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   createTRPCRouter,
@@ -31,7 +32,20 @@ export const ViewRouter = createTRPCRouter({
       return ViewService.update(ctx.db, input.viewId, input);
     }),
 
-  delete: viewProcedure.mutation(async ({ ctx, input }) => {
-    return ViewService.delete(ctx.db, input.viewId);
-  }),
+  delete: viewProcedure
+    .input(z.object({ viewId: z.string(), tableId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const viewCount = await ctx.db.view.count({
+        where: { tableId: input.tableId },
+      });
+
+      if (viewCount <= 1) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot delete the last view in a table",
+        });
+      }
+
+      return ViewService.delete(ctx.db, input.viewId);
+    }),
 });

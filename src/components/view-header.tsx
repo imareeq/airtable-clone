@@ -111,15 +111,15 @@ export default function ViewHeader() {
 
   const deleteView = api.view.delete.useMutation({
     onSuccess: () => {
-      router.push(`/${baseId}/${tableId}`);
       utils.view.getById.invalidate({ viewId });
+      router.push(`/${baseId}/${tableId}`);
       router.refresh();
     },
   });
 
   const handleMenuClick = (label: string) => {
     if (label === "Delete view") {
-      deleteView.mutate({ viewId });
+      deleteView.mutate({ viewId, tableId });
     }
   };
 
@@ -149,7 +149,7 @@ export default function ViewHeader() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-88 space-y-2 p-3">
             {VIEW_MENU_ITEMS.map((item, i) => (
-              <>
+              <div key={item.label}>
                 {"description" in item ? (
                   <DropdownMenuItem
                     key={item.label}
@@ -181,7 +181,7 @@ export default function ViewHeader() {
                     {"pro" in item && (
                       <Badge
                         variant="secondary"
-                        className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-600"
+                        className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[11px] font-medium"
                       >
                         ✦ Team
                       </Badge>
@@ -189,7 +189,7 @@ export default function ViewHeader() {
                   </DropdownMenuItem>
                 )}
                 {item.separator && <DropdownMenuSeparator key={`sep-${i}`} />}
-              </>
+              </div>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>

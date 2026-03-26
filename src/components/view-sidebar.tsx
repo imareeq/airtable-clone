@@ -6,13 +6,14 @@ import {
   CalendarIcon,
   SquaresFourIcon,
   RowsIcon,
-  ChartBarIcon,
   ListIcon,
-  TextAlignLeftIcon,
   KanbanIcon,
   FlowArrowIcon,
   ArticleIcon,
   SquareSplitHorizontalIcon,
+  DotsThreeIcon,
+  DotsSixVerticalIcon,
+  StarIcon,
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import {
@@ -37,6 +38,8 @@ import { useParams, useRouter } from "next/navigation";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 import { CreateViewForm } from "./create-view-dialogue";
+import { ViewContextMenu } from "./view-context-menu";
+import { useViewMutations } from "~/hooks/use-view-mutation";
 
 const VIEW_TYPES = [
   {
@@ -92,6 +95,8 @@ export function ViewSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const [search, setSearch] = useState("");
+  const [contextViewId, setContextViewId] = useState<string>("");
+  const [renamingViewId, setRenamingViewId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const { views } = useTable();
@@ -101,15 +106,11 @@ export function ViewSidebar({
     viewId: string;
   }>();
   const router = useRouter();
-  const utils = api.useUtils();
 
-  const createView = api.view.create.useMutation({
-    onSuccess: async (newView) => {
-      await utils.view.getById.invalidate();
-      router.push(`/${baseId}/${tableId}/${newView.id}`);
-      router.refresh();
-    },
-  });
+  const { createView, deleteView, updateView } = useViewMutations(
+    baseId,
+    tableId,
+  );
 
   const filteredViews = views.filter((view) =>
     view.name.toLowerCase().includes(search.toLowerCase()),
@@ -155,7 +156,7 @@ export function ViewSidebar({
                       ) : (
                         <DropdownMenuItem
                           key={type.label}
-                          className="flex items-center justify-start gap-2.5 rounded-md p-2 text-[13px]"
+                          className="flex items-center justify-start gap-2.5 rounded-md px-2 py-3 text-[13px]"
                           onSelect={(e) => {
                             e.preventDefault();
                             if (type.label === "Grid") setShowCreateForm(true);
@@ -166,7 +167,7 @@ export function ViewSidebar({
                           {type.pro && (
                             <Badge
                               variant="secondary"
-                              className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+                              className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[11px] font-medium"
                             >
                               ✦ Team
                             </Badge>
@@ -188,34 +189,92 @@ export function ViewSidebar({
           className="h-8 text-[13px]"
         />
 
-        <SidebarMenu>
-          {filteredViews.length === 0 ? (
-            <p className="text-muted-foreground px-2 py-4 text-center text-[13px]">
-              No views found
-            </p>
-          ) : (
-            filteredViews.map((view) => {
+        <ViewContextMenu
+          onDelete={() =>
+            deleteView.mutate({ viewId: contextViewId!, tableId })
+          }
+          onRename={() => setRenamingViewId(contextViewId)}
+          isLastView={views.length === 1}
+        >
+          <SidebarMenu>
+            {filteredViews.map((view) => {
               const isActive = view.id === viewId;
               return (
-                <SidebarMenuItem key={view.id}>
+                <SidebarMenuItem
+                  key={view.id}
+                  onContextMenu={() => setContextViewId(view.id)}
+                  className="group/view-item"
+                >
                   <SidebarMenuButton
                     onClick={() =>
                       router.push(`/${baseId}/${tableId}/${view.id}`)
                     }
                     className={cn(
-                      "text-[13px]",
-                      isActive &&
-                        "bg-muted-foreground/10 text-[13px] font-medium",
+                      "cursor-pointer items-center text-[13px]",
+                      isActive && "bg-muted-foreground/10 font-medium",
                     )}
                   >
-                    <TableIcon className="text-primary size-4.5" />
-                    {view.name}
+                    <span className="relative size-4.5 shrink-0">
+                      <TableIcon className="text-primary absolute inset-0 size-4.5 transition-opacity group-hover/view-item:opacity-0" />
+                      <StarIcon className="absolute inset-0 size-4 opacity-0 transition-opacity group-hover/view-item:opacity-100" />
+                    </span>
+
+                    {renamingViewId === view.id ? (
+                      <Input
+                        defaultValue={view.name}
+                        autoFocus
+                        className="h-5 px-1 text-[13px]"
+                        onBlur={(e) => {
+                          updateView.mutate({
+                            viewId: view.id,
+                            name: e.target.value,
+                          });
+                          setRenamingViewId(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            updateView.mutate({
+                              viewId: view.id,
+                              name: e.currentTarget.value,
+                            });
+                            setRenamingViewId(null);
+                          }
+                          if (e.key === "Escape") setRenamingViewId(null);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <span className="flex-1 truncate">{view.name}</span>
+                    )}
+
+                    <span className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover/view-item:opacity-100">
+                      <DotsThreeIcon
+                        className="size-4"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setContextViewId(view.id);
+                          e.currentTarget
+                            .closest('[data-sidebar="menu-button"]')
+                            ?.dispatchEvent(
+                              new MouseEvent("contextmenu", {
+                                bubbles: true,
+                                clientX: e.clientX,
+                                clientY: e.clientY,
+                              }),
+                            );
+                        }}
+                      />
+                      <DotsSixVerticalIcon
+                        className="size-4 cursor-grab opacity-50"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               );
-            })
-          )}
-        </SidebarMenu>
+            })}
+          </SidebarMenu>
+        </ViewContextMenu>
       </SidebarContent>
     </Sidebar>
   );
