@@ -32,11 +32,11 @@ import { ColumnType } from "generated/prisma";
 import type { Column } from "generated/prisma";
 import type { ReactNode } from "react";
 import { Button } from "./ui/button";
-import { useTable } from "~/contexts/table-context";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useSpreadsheetMutations } from "~/hooks/use-spreadsheet-mutation";
+import { useTable } from "~/hooks/use-table";
 
 const columnTypeIcon: Record<ColumnType, ReactNode> = {
   [ColumnType.TEXT]: <TextAaIcon className="size-4" />,

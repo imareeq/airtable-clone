@@ -15,7 +15,7 @@ import {
   DotsSixVerticalIcon,
   StarIcon,
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -33,12 +33,12 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Badge } from "./ui/badge";
-import { useTable } from "~/contexts/table-context";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "~/lib/utils";
 import { CreateViewForm } from "./create-view-dialogue";
 import { ViewContextMenu } from "./view-context-menu";
 import { useViewMutations } from "~/hooks/use-view-mutation";
+import { useTable } from "~/hooks/use-table";
 
 const VIEW_TYPES = [
   {
@@ -98,22 +98,58 @@ export function ViewSidebar({
   const [renamingViewId, setRenamingViewId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { views } = useTable();
+  const table = useTable();
+  const views = table?.views ?? [];
   const { baseId, tableId, viewId } = useParams<{
     baseId: string;
     tableId: string;
     viewId: string;
   }>();
   const router = useRouter();
+  const renameInputRef = useRef<HTMLInputElement>(null);
 
   const { createView, deleteView, updateView } = useViewMutations(
     baseId,
     tableId,
   );
 
+  // Focus and select when rename starts, using rAF to wait for context menu close animation
+  useEffect(() => {
+    if (!renamingViewId) return;
+    const frame = requestAnimationFrame(() => {
+      renameInputRef.current?.focus();
+      renameInputRef.current?.select();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [renamingViewId]);
+
+  // Commit rename when clicking outside
+  useEffect(() => {
+    if (!renamingViewId) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      if (
+        renameInputRef.current &&
+        !renameInputRef.current.contains(e.target as Node)
+      ) {
+        updateView.mutate({
+          viewId: renamingViewId,
+          name: renameInputRef.current.value,
+        });
+        setRenamingViewId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [renamingViewId]);
+
   const filteredViews = views.filter((view) =>
     view.name.toLowerCase().includes(search.toLowerCase()),
   );
+
+  const commitRename = (viewId: string, name: string) => {
+    updateView.mutate({ viewId, name });
+    setRenamingViewId(null);
+  };
 
   return (
     <Sidebar className="bg-background duration-200" {...props}>
@@ -198,6 +234,8 @@ export function ViewSidebar({
           <SidebarMenu>
             {filteredViews.map((view) => {
               const isActive = view.id === viewId;
+              const isRenaming = renamingViewId === view.id;
+
               return (
                 <SidebarMenuItem
                   key={view.id}
@@ -205,9 +243,12 @@ export function ViewSidebar({
                   className="group/view-item"
                 >
                   <SidebarMenuButton
-                    onClick={() =>
-                      router.push(`/${baseId}/${tableId}/${view.id}`)
-                    }
+                    tabIndex={isRenaming ? -1 : undefined}
+                    onClick={() => {
+                      if (!isRenaming) {
+                        router.push(`/${baseId}/${tableId}/${view.id}`);
+                      }
+                    }}
                     className={cn(
                       "cursor-pointer items-center text-[13px]",
                       isActive && "bg-muted-foreground/10 font-medium",
@@ -218,27 +259,19 @@ export function ViewSidebar({
                       <StarIcon className="absolute inset-0 size-4 opacity-0 transition-opacity group-hover/view-item:opacity-100" />
                     </span>
 
-                    {renamingViewId === view.id ? (
+                    {isRenaming ? (
                       <Input
+                        ref={renameInputRef}
                         defaultValue={view.name}
-                        autoFocus
                         className="h-5 px-1 text-[13px]"
-                        onBlur={(e) => {
-                          updateView.mutate({
-                            viewId: view.id,
-                            name: e.target.value,
-                          });
-                          setRenamingViewId(null);
-                        }}
                         onKeyDown={(e) => {
+                          e.stopPropagation();
                           if (e.key === "Enter") {
-                            updateView.mutate({
-                              viewId: view.id,
-                              name: e.currentTarget.value,
-                            });
+                            commitRename(view.id, e.currentTarget.value);
+                          }
+                          if (e.key === "Escape") {
                             setRenamingViewId(null);
                           }
-                          if (e.key === "Escape") setRenamingViewId(null);
                         }}
                         onClick={(e) => e.stopPropagation()}
                       />

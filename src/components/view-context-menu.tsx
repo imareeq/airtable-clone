@@ -35,7 +35,10 @@ export function ViewContextMenu({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-70 p-3">
+      <ContextMenuContent
+        onCloseAutoFocus={(e) => e.preventDefault()}
+        className="w-70 p-3"
+      >
         <ContextMenuItem className="gap-2.5 text-[13px]" onClick={onFavorite}>
           <StarIcon className="size-4" />
           Add to &apos;My favorites&apos;
@@ -46,7 +49,6 @@ export function ViewContextMenu({
             ✦ Team
           </Badge>
         </ContextMenuItem>
-        <ContextMenuSeparator className="my-2.5" />
         <ContextMenuItem className="gap-2.5 p-2 text-[13px]" onClick={onRename}>
           <PencilSimpleIcon className="size-4" />
           Rename view

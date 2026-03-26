@@ -11,12 +11,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Switch } from "./ui/switch";
-import { useTable } from "~/contexts/table-context";
 import { ColumnType } from "generated/prisma";
 import type { ReactNode } from "react";
 import { useViewMutations } from "~/hooks/use-view-mutation";
 import { useParams } from "next/navigation";
 import { useView } from "~/hooks/use-view";
+import { useTable } from "~/hooks/use-table";
 
 const columnTypeIcon: Record<ColumnType, ReactNode> = {
   [ColumnType.TEXT]: <TextAaIcon className="size-4 text-black/50" />,

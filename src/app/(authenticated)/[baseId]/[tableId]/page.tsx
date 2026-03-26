@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useTable } from "~/contexts/table-context";
+import { useTable } from "~/hooks/use-table";
 
 export default function TableIndexPage() {
   const router = useRouter();

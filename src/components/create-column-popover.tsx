@@ -23,8 +23,8 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { ColumnType } from "generated/prisma";
-import { useTable } from "~/contexts/table-context";
 import { useSpreadsheetMutations } from "~/hooks/use-spreadsheet-mutation";
+import { useTable } from "~/hooks/use-table";
 
 export function CreateColumnPopover() {
   const [open, setOpen] = useState(false);

@@ -35,7 +35,6 @@ import {
 import { Badge } from "./ui/badge";
 import { useSidebar } from "./ui/sidebar";
 import { useParams, useRouter } from "next/navigation";
-import { useTable } from "~/contexts/table-context";
 import { useSearch } from "~/contexts/table-search-context";
 import { useState } from "react";
 import { Input } from "./ui/input";
@@ -45,6 +44,7 @@ import { HideFieldsPopover } from "./hide-fields-popover";
 import { useView } from "~/hooks/use-view";
 import { cn } from "~/lib/utils";
 import { Spinner } from "./ui/spinner";
+import { useTable } from "~/hooks/use-table";
 
 const VIEW_MENU_ITEMS = [
   {
