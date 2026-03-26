@@ -22,6 +22,7 @@ import {
   TrashIcon,
   ArrowCircleDownIcon,
   CaretRightIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import {
@@ -37,17 +38,11 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { useView } from "~/contexts/view-context";
 import { useTable } from "~/contexts/table-context";
-
-const toolbarItems = [
-  { icon: <EyeSlashIcon className="size-4" />, label: "Hide fields" },
-  { icon: <FunnelSimpleIcon className="size-4" />, label: "Filter" },
-  { icon: <ListBulletsIcon className="size-4" />, label: "Group" },
-  { icon: <ArrowsDownUpIcon className="size-4" />, label: "Sort" },
-  { icon: <PaintBucketIcon className="size-4" />, label: "Color" },
-  { icon: <TextAlignJustifyIcon className="size-4" />, label: null },
-  { icon: <ExportIcon className="size-4" />, label: "Share and sync" },
-  { icon: <MagnifyingGlassIcon className="size-4" />, label: null },
-];
+import { useSearch } from "~/contexts/table-search-context";
+import { useState } from "react";
+import { Input } from "./ui/input";
+import { useViewMutations } from "~/hooks/use-view-mutation";
+import { useDebounceCallback } from "usehooks-ts";
 
 const VIEW_MENU_ITEMS = [
   {
@@ -103,26 +98,38 @@ const VIEW_MENU_ITEMS = [
 
 export default function ViewHeader() {
   const { toggleSidebar } = useSidebar();
+  const [searchOpen, setSearchOpen] = useState(false);
   const { baseId, tableId, viewId } = useParams<{
     baseId: string;
     tableId: string;
     viewId: string;
   }>();
-  const router = useRouter();
-  const utils = api.useUtils();
   const table = useTable();
   const view = useView();
+  const { setSearch } = useSearch();
+  const { deleteView } = useViewMutations(tableId, viewId);
 
-  const deleteView = api.view.delete.useMutation({
-    onSuccess: () => {
-      utils.view.getById.invalidate({ viewId });
-      router.push(`/${baseId}/${tableId}`);
-      router.refresh();
+  const debouncedSetSearch = useDebounceCallback((value: string) => {
+    setSearch(value);
+  }, 300);
+
+  const toolbarItems = [
+    { icon: <EyeSlashIcon className="size-4" />, label: "Hide fields" },
+    { icon: <FunnelSimpleIcon className="size-4" />, label: "Filter" },
+    { icon: <ListBulletsIcon className="size-4" />, label: "Group" },
+    { icon: <ArrowsDownUpIcon className="size-4" />, label: "Sort" },
+    { icon: <PaintBucketIcon className="size-4" />, label: "Color" },
+    { icon: <TextAlignJustifyIcon className="size-4" />, label: null },
+    { icon: <ExportIcon className="size-4" />, label: "Share and sync" },
+    {
+      icon: <MagnifyingGlassIcon className="size-4" />,
+      label: null,
+      onClick: () => setSearchOpen((v) => !v),
     },
-  });
+  ];
 
   return (
-    <div className="bg-background border-border flex h-12 w-full flex-row items-center justify-between border-b px-2">
+    <div className="bg-background border-border relative flex h-12 w-full flex-row items-center justify-between border-b px-2">
       <div className="flex items-center gap-0.5">
         <Button
           variant="ghost"
@@ -207,11 +214,44 @@ export default function ViewHeader() {
             variant="ghost"
             size="sm"
             className="text-muted-foreground hover:text-muted-foreground flex h-7 items-center gap-1.5 rounded-sm px-2 text-[13px] font-normal"
+            onClick={item.onClick}
           >
             {item.icon}
             {item.label && <span>{item.label}</span>}
           </Button>
         ))}
+        {searchOpen && (
+          <div className="border-border bg-background absolute top-full right-2 z-50 flex h-9.5 w-91.5 items-center gap-2 rounded-md rounded-t-none border shadow-md">
+            <Input
+              autoFocus
+              placeholder="Find in view..."
+              className="bg-background h-full flex-1 border-none p-2 text-[13px] shadow-none focus-visible:ring-0"
+              onChange={(e) => debouncedSetSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setSearchOpen(false);
+                  setSearch("");
+                }
+              }}
+            />
+            <Button
+              size="sm"
+              className="h-6 rounded-lg bg-black py-3 text-[12px] text-white hover:bg-black/80"
+            >
+              Ask Omni
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setSearchOpen(false);
+                setSearch("");
+              }}
+              className="text-muted-foreground hover:text-foreground mr-2 pl-0"
+            >
+              <XIcon className="size-3" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

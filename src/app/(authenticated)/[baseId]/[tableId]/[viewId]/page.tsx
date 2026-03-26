@@ -13,6 +13,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import SeedDataButton from "~/components/seed-data-button";
 import { useDebounceCallback } from "usehooks-ts";
 import { ROW_LIMIT } from "~/services/table-service";
+import { useSearch } from "~/contexts/table-search-context";
 
 export type ActiveCell = {
   rowIndex: number;
@@ -26,6 +27,7 @@ export default function Page() {
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const utils = api.useUtils();
+  const { search } = useSearch();
   const isJumping = useRef<boolean>(false);
 
   const {
@@ -36,7 +38,7 @@ export default function Page() {
     hasPreviousPage,
     isFetching,
   } = api.table.getRows.useInfiniteQuery(
-    { tableId: table.id },
+    { tableId: table.id, search: search || undefined },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       getPreviousPageParam: (firstPage) => firstPage.prevCursor,

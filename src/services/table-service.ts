@@ -36,6 +36,7 @@ export const TableService = {
     tableId: string,
     columnIds: string[],
     cursor: number = 0,
+    search?: string,
   ) {
     const cols = [
       `"id"`,
@@ -43,13 +44,21 @@ export const TableService = {
       ...columnIds.map((id) => `"${id}"`),
     ].join(", ");
 
+    const whereClause = search
+      ? `WHERE search_vector @@ plainto_tsquery('english', $2)`
+      : "";
+
+    const params: unknown[] = [cursor];
+    if (search) params.push(search);
+
     return db.$queryRawUnsafe<SpreadsheetRow[]>(
       `SELECT ${cols}
      FROM "spreadsheet_${tableId}"
+     ${whereClause}
      ORDER BY "order_index" ASC
      LIMIT ${ROW_LIMIT}
      OFFSET $1`,
-      cursor,
+      ...params,
     );
   },
 
@@ -180,7 +189,15 @@ export const TableService = {
     }
   },
 
-  async getRowCount(db: DBClient, tableId: string) {
+  async getRowCount(db: DBClient, tableId: string, search?: string) {
+    if (search) {
+      const result = await db.$queryRawUnsafe<[{ count: bigint }]>(
+        `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}" WHERE search_vector @@ plainto_tsquery('english', $1)`,
+        search,
+      );
+      return Number(result[0]?.count ?? 0);
+    }
+
     const result = await db.$queryRawUnsafe<[{ count: bigint }]>(
       `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}"`,
     );

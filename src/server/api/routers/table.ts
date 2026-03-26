@@ -27,6 +27,7 @@ export const TableRouter = createTRPCRouter({
       z.object({
         cursor: z.number().optional(),
         offset: z.number().optional(),
+        search: z.string().optional(),
       }),
     )
     .output(
@@ -45,6 +46,7 @@ export const TableRouter = createTRPCRouter({
         ctx.table.id,
         ctx.table.columns.map((col) => col.id),
         currentOffset,
+        input.search,
       );
 
       const rows = res.map((row, index) => ({
@@ -52,7 +54,7 @@ export const TableRouter = createTRPCRouter({
         row_number: currentOffset + index + 1,
       }));
 
-      const totalCount = await TableService.getRowCount(ctx.db, ctx.table.id);
+      const totalCount = await TableService.getRowCount(ctx.db, ctx.table.id, input.search);
 
       const nextCursor =
         currentOffset + rows.length < totalCount
