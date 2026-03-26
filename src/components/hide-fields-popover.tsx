@@ -34,7 +34,7 @@ export function HideFieldsPopover({ children }: HideFieldsPopoverProps) {
   const view = useView();
 
   const [hiddenColumns, setHiddenColumns] = useState<string[]>(
-    Array.isArray(view.hiddenColumns) ? (view.hiddenColumns as string[]) : [],
+    Array.isArray(view?.hiddenColumns) ? (view.hiddenColumns as string[]) : [],
   );
 
   const { updateView } = useViewMutations(baseId, table.id);

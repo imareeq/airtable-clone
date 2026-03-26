@@ -44,6 +44,7 @@ import { useDebounceCallback } from "usehooks-ts";
 import { HideFieldsPopover } from "./hide-fields-popover";
 import { useView } from "~/hooks/use-view";
 import { cn } from "~/lib/utils";
+import { Spinner } from "./ui/spinner";
 
 const VIEW_MENU_ITEMS = [
   {
@@ -114,7 +115,7 @@ export default function ViewHeader() {
     setSearch(value);
   }, 300);
 
-  const hiddenCount = Array.isArray(view.hiddenColumns)
+  const hiddenCount = Array.isArray(view?.hiddenColumns)
     ? (view.hiddenColumns as string[]).length
     : 0;
 
@@ -164,7 +165,7 @@ export default function ViewHeader() {
               className="flex h-7 items-center gap-1.5 rounded-sm px-2 text-[13px] font-medium"
             >
               <TableIcon className="text-primary size-5" />
-              <span>{view.name}</span>
+              <span>{view?.name ?? <Spinner />}</span>
               <CaretDownIcon size={11} />
             </Button>
           </DropdownMenuTrigger>
