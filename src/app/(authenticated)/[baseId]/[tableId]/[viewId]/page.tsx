@@ -5,7 +5,6 @@ import { ColumnType } from "generated/prisma";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ColumnHeader } from "~/components/column-header";
 import { Spreadsheet } from "~/components/spreadsheet";
-import { useTable } from "~/contexts/table-context";
 import type { SpreadsheetRow } from "~/server/api/routers/table";
 import { api } from "~/trpc/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -15,6 +14,7 @@ import { ROW_LIMIT } from "~/services/table-service";
 import { useSearch } from "~/contexts/table-search-context";
 import { useParams } from "next/navigation";
 import { useView } from "~/hooks/use-view";
+import { useTable } from "~/hooks/use-table";
 
 export type ActiveCell = {
   rowIndex: number;

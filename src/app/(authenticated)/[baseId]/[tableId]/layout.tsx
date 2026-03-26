@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import TableNav from "~/components/table-nav";
-import { TableProvider } from "~/contexts/table-context";
-import { api } from "~/trpc/server";
+import { api, HydrateClient } from "~/trpc/server";
 
 export default async function TableLayout({
   children,
@@ -11,14 +10,14 @@ export default async function TableLayout({
   params: Promise<{ baseId: string; tableId: string }>;
 }) {
   const { tableId } = await params;
-  const table = await api.table.getById({ tableId });
+  void (await api.table.getById.prefetch({ tableId }));
 
   return (
-    <TableProvider table={table}>
-      <div className="flex h-full w-full flex-1 flex-col overflow-hidden bg-background">
+    <HydrateClient>
+      <div className="bg-background flex h-full w-full flex-1 flex-col overflow-hidden">
         <TableNav />
         {children}
       </div>
-    </TableProvider>
+    </HydrateClient>
   );
 }

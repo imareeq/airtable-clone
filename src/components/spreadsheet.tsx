@@ -21,13 +21,13 @@ import { Button } from "./ui/button";
 import { PlusIcon } from "@phosphor-icons/react";
 import { api } from "~/trpc/react";
 import { CreateColumnPopover } from "./create-column-popover";
-import { useTable } from "~/contexts/table-context";
 import SpreadsheetContextMenu from "./spreadsheet-context-menu";
 import { ColumnType } from "generated/prisma";
 import type { ActiveCell } from "~/app/(authenticated)/[baseId]/[tableId]/[viewId]/page";
 import { isValidNumberInput, validateValue } from "~/lib/cell-utils";
 import { useEditingCell } from "~/hooks/use-editing-cell";
 import { useSpreadsheetMutations } from "~/hooks/use-spreadsheet-mutation";
+import { useTable } from "~/hooks/use-table";
 
 interface SpreadsheetProps<TData extends { id: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];

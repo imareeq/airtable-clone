@@ -22,11 +22,10 @@ import {
   type Icon,
   CaretDownIcon,
 } from "@phosphor-icons/react";
-import { useTable } from "~/contexts/table-context";
 import { Button } from "./ui/button";
 import { useBase } from "~/contexts/base-context";
-import { useRouter } from "next/navigation";
-import { api } from "~/trpc/react";
+import { useTableMutations } from "~/hooks/use-table-mutations";
+import { useTable } from "~/hooks/use-table";
 
 type TableMenuItem =
   | {
@@ -47,16 +46,8 @@ export default function TableActionsDropdown() {
   const base = useBase();
   const { tables } = useBase();
   const isOnlyTable = tables.length === 1;
-  const router = useRouter();
-  const utils = api.useUtils();
 
-  const deleteTable = api.table.delete.useMutation({
-    onSuccess: async () => {
-      await utils.base.getById.invalidate({ baseId: base.id });
-      router.push(`/${base.id}`);
-      router.refresh();
-    },
-  });
+  const { deleteTable } = useTableMutations(base.id);
 
   const menuItems: TableMenuItem[] = [
     { label: "Import data", icon: ArrowCircleUpIcon, hasArrow: true },

@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation";
 import { PlusIcon } from "@phosphor-icons/react";
 import { cn } from "~/lib/utils";
-import { api } from "~/trpc/react";
 import { Button } from "./ui/button";
 import { useBase } from "~/contexts/base-context";
 import TableActionsDropdown from "./table-actions-dropdown";
+import { useTableMutations } from "~/hooks/use-table-mutations";
 
 interface TableTabsProps {
   activeTableId: string;
@@ -20,17 +20,10 @@ export function TableTabs({
   isDarkBackground,
 }: TableTabsProps) {
   const router = useRouter();
-  const utils = api.useUtils();
   const base = useBase();
   const tables = base.tables;
 
-  const createTable = api.table.create.useMutation({
-    onSuccess: async (newTable) => {
-      router.refresh();
-      await utils.base.getById.invalidate({ baseId });
-      router.push(`/${baseId}/${newTable.id}`);
-    },
-  });
+  const { createTable } = useTableMutations(base.id);
 
   const handleCreateTable = () => {
     createTable.mutate({
