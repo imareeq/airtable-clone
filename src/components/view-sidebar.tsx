@@ -36,54 +36,55 @@ import { useTable } from "~/contexts/table-context";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
+import { CreateViewForm } from "./create-view-dialogue";
 
 const VIEW_TYPES = [
   {
     label: "Grid",
     icon: <TableIcon className="size-4 text-blue-500" />,
-    on: false,
+    pro: false,
   },
   {
     label: "Calendar",
     icon: <CalendarIcon className="size-4 text-orange-500" />,
-    on: false,
+    pro: false,
   },
   {
     label: "Gallery",
     icon: <SquaresFourIcon className="size-4 text-purple-500" />,
-    on: false,
+    pro: false,
   },
   {
     label: "Kanban",
     icon: <KanbanIcon className="size-4 text-green-600" />,
-    on: false,
+    pro: false,
   },
   {
     label: "Timeline",
     icon: <RowsIcon className="size-4 text-red-500" />,
-    on: false,
+    pro: true,
   },
   {
     label: "List",
     icon: <ListIcon className="size-4 text-teal-500" />,
-    on: false,
+    pro: false,
   },
   {
     label: "Gantt",
     icon: <FlowArrowIcon className="size-4 text-cyan-500" />,
-    on: false,
+    pro: true,
   },
   { separator: true },
   {
     label: "Form",
     icon: <ArticleIcon className="size-4 text-pink-500" />,
-    on: false,
+    pro: false,
   },
   { separator: true },
   {
     label: "Section",
     icon: <SquareSplitHorizontalIcon className="size-4 text-pink-500" />,
-    on: false,
+    pro: true,
   },
 ] as const;
 
@@ -91,6 +92,8 @@ export function ViewSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const [search, setSearch] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const { views } = useTable();
   const { baseId, tableId, viewId } = useParams<{
     baseId: string;
@@ -117,7 +120,13 @@ export function ViewSidebar({
       <SidebarContent className="gap-2 p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
+            <DropdownMenu
+              open={dropdownOpen}
+              onOpenChange={(open) => {
+                setDropdownOpen(open);
+                if (!open) setShowCreateForm(false);
+              }}
+            >
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start gap-2">
                   <PlusIcon className="size-4" />
@@ -127,37 +136,45 @@ export function ViewSidebar({
               <DropdownMenuContent
                 side="right"
                 align="start"
-                className="w-60 p-3"
+                className={showCreateForm ? "w-100 p-4" : "w-60 p-3"}
               >
-                {VIEW_TYPES.map((type, i) =>
-                  "separator" in type ? (
-                    <DropdownMenuSeparator key={i} />
-                  ) : (
-                    <DropdownMenuItem
-                      key={type.label}
-                      disabled={type.on}
-                      className="flex items-center gap-2.5 rounded-md p-2 text-[13px]"
-                      onClick={() => {
-                        if (type.on) return;
-                        if (type.label !== "Grid") return;
-                        createView.mutate({
-                          tableId,
-                          name: `${type.label} View`,
-                        });
-                      }}
-                    >
-                      {type.icon}
-                      <span className="flex-1">{type.label}</span>
-                      {type.on && (
-                        <Badge
-                          variant="secondary"
-                          className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-600"
+                {showCreateForm ? (
+                  <CreateViewForm
+                    onConfirm={(name) => {
+                      createView.mutate({ tableId, name });
+                      setDropdownOpen(false);
+                      setShowCreateForm(false);
+                    }}
+                    onCancel={() => setShowCreateForm(false)}
+                  />
+                ) : (
+                  <>
+                    {VIEW_TYPES.map((type, i) =>
+                      "separator" in type ? (
+                        <DropdownMenuSeparator key={i} />
+                      ) : (
+                        <DropdownMenuItem
+                          key={type.label}
+                          className="flex items-center justify-start gap-2.5 rounded-md p-2 text-[13px]"
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            if (type.label === "Grid") setShowCreateForm(true);
+                          }}
                         >
-                          ✦ Team
-                        </Badge>
-                      )}
-                    </DropdownMenuItem>
-                  ),
+                          {type.icon}
+                          <span className="flex-1">{type.label}</span>
+                          {type.pro && (
+                            <Badge
+                              variant="secondary"
+                              className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+                            >
+                              ✦ Team
+                            </Badge>
+                          )}
+                        </DropdownMenuItem>
+                      ),
+                    )}
+                  </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>

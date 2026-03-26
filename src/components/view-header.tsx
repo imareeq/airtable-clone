@@ -35,8 +35,6 @@ import { Badge } from "./ui/badge";
 import { useSidebar } from "./ui/sidebar";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
-import { useTable } from "~/contexts/table-context";
-import { useView } from "~/contexts/view-context";
 
 const toolbarItems = [
   { icon: <EyeSlashIcon className="size-4" />, label: "Hide fields" },
