@@ -45,11 +45,11 @@ export const TableService = {
     ].join(", ");
 
     const whereClause = search
-      ? `WHERE search_vector @@ plainto_tsquery('english', $2)`
+      ? `WHERE search_vector @@ to_tsquery('english', $2)`
       : "";
 
     const params: unknown[] = [cursor];
-    if (search) params.push(search);
+    if (search) params.push(`${search}:*`);
 
     return db.$queryRawUnsafe<SpreadsheetRow[]>(
       `SELECT ${cols}
@@ -192,8 +192,8 @@ export const TableService = {
   async getRowCount(db: DBClient, tableId: string, search?: string) {
     if (search) {
       const result = await db.$queryRawUnsafe<[{ count: bigint }]>(
-        `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}" WHERE search_vector @@ plainto_tsquery('english', $1)`,
-        search,
+        `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}" WHERE search_vector @@ to_tsquery('english', $1)`,
+        `${search}:*`,
       );
       return Number(result[0]?.count ?? 0);
     }
