@@ -35,6 +35,8 @@ import { Badge } from "./ui/badge";
 import { useSidebar } from "./ui/sidebar";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
+import { useView } from "~/contexts/view-context";
+import { useTable } from "~/contexts/table-context";
 
 const toolbarItems = [
   { icon: <EyeSlashIcon className="size-4" />, label: "Hide fields" },
@@ -108,6 +110,8 @@ export default function ViewHeader() {
   }>();
   const router = useRouter();
   const utils = api.useUtils();
+  const table = useTable();
+  const view = useView();
 
   const deleteView = api.view.delete.useMutation({
     onSuccess: () => {
@@ -116,12 +120,6 @@ export default function ViewHeader() {
       router.refresh();
     },
   });
-
-  const handleMenuClick = (label: string) => {
-    if (label === "Delete view") {
-      deleteView.mutate({ viewId, tableId });
-    }
-  };
 
   return (
     <div className="bg-background border-border flex h-12 w-full flex-row items-center justify-between border-b px-2">
@@ -143,7 +141,7 @@ export default function ViewHeader() {
               className="flex h-7 items-center gap-1.5 rounded-sm px-2 text-[13px] font-medium"
             >
               <TableIcon className="text-primary size-5" />
-              <span>Grid view</span>
+              <span>{view.name}</span>
               <CaretDownIcon size={11} />
             </Button>
           </DropdownMenuTrigger>
@@ -170,7 +168,14 @@ export default function ViewHeader() {
                   <DropdownMenuItem
                     key={item.label}
                     className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px]"
-                    onClick={() => handleMenuClick(item.label)}
+                    disabled={
+                      item.label === "Delete view" && table.views.length === 1
+                    }
+                    onClick={() => {
+                      if (item.label === "Delete view") {
+                        deleteView.mutate({ viewId, tableId });
+                      }
+                    }}
                   >
                     {item.icon}
                     <span
