@@ -23,9 +23,9 @@ import {
   CaretDownIcon,
 } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
-import { useBase } from "~/contexts/base-context";
 import { useTableMutations } from "~/hooks/use-table-mutations";
 import { useTable } from "~/hooks/use-table";
+import { useBase } from "~/hooks/use-base";
 
 type TableMenuItem =
   | {
@@ -44,7 +44,7 @@ type TableMenuItem =
 export default function TableActionsDropdown() {
   const table = useTable();
   const base = useBase();
-  const { tables } = useBase();
+  const tables = base.tables;
   const isOnlyTable = tables.length === 1;
 
   const { deleteTable } = useTableMutations(base.id);

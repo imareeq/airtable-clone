@@ -3,8 +3,7 @@ import type { ReactNode } from "react";
 import AppHeader from "~/components/app-header";
 import { AppSidebar } from "~/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
-import { BaseProvider } from "~/contexts/base-context";
-import { api } from "~/trpc/server";
+import { api, HydrateClient } from "~/trpc/server";
 
 export async function generateMetadata({
   params,
@@ -33,13 +32,13 @@ export default async function AppLayout({
   params: Promise<{ baseId: string }>;
 }) {
   const { baseId } = await params;
-  const base = await api.base.getById({ baseId });
+  void (await api.base.getById.prefetch({ baseId }));
 
   return (
-    <BaseProvider base={base}>
+    <HydrateClient>
       <div className="h-full overflow-hidden">
         <div className="h-full [--header-height:calc(--spacing(14))]">
-          <SidebarProvider open={false} className="h-full w-full min-h-0">
+          <SidebarProvider open={false} className="h-full min-h-0 w-full">
             <AppSidebar collapsible="icon" />
             <SidebarInset className="bg-muted flex h-full w-full flex-col overflow-hidden">
               <AppHeader />
@@ -48,6 +47,6 @@ export default async function AppLayout({
           </SidebarProvider>
         </div>
       </div>
-    </BaseProvider>
+    </HydrateClient>
   );
 }
