@@ -29,6 +29,14 @@ export const TableRouter = createTRPCRouter({
         cursor: z.number().optional(),
         offset: z.number().optional(),
         search: z.string().optional(),
+        sortConfig: z
+          .array(
+            z.object({
+              columnId: z.string(),
+              direction: z.enum(["asc", "desc"]),
+            }),
+          )
+          .optional(),
       }),
     )
     .output(
@@ -48,6 +56,7 @@ export const TableRouter = createTRPCRouter({
         ctx.table.columns.map((col) => col.id),
         currentOffset,
         input.search,
+        input.sortConfig,
       );
 
       const rows = res.map((row, index) => ({
@@ -122,7 +131,9 @@ export const TableRouter = createTRPCRouter({
         });
       }
 
-      const validationError = columnTypeConfig[validColumn.type].validate(input.value);
+      const validationError = columnTypeConfig[validColumn.type].validate(
+        input.value,
+      );
       if (validationError) {
         throw new TRPCError({ code: "BAD_REQUEST", message: validationError });
       }

@@ -120,6 +120,10 @@ export default function ViewHeader() {
     ? (view.hiddenColumns as string[]).length
     : 0;
 
+  const sortCount = Array.isArray(view?.sortConfig)
+    ? (view.sortConfig as { columnId: string; direction: string }[]).length
+    : 0;
+
   const toolbarItems = [
     {
       icon: <EyeSlashIcon className="size-4" />,
@@ -137,7 +141,14 @@ export default function ViewHeader() {
     { icon: <ListBulletsIcon className="size-4" />, label: "Group" },
     {
       icon: <ArrowsDownUpIcon className="size-4" />,
-      label: "Sort",
+      label:
+        sortCount > 0
+          ? `Sorted by ${sortCount} ${sortCount === 1 ? "field" : "fields"}`
+          : "Sort",
+      className:
+        sortCount > 0
+          ? "bg-appearance-peach-light! hover:bg-primary/20! hover:border hover:border-primary/50"
+          : "",
       popover: "sort",
     },
     { icon: <PaintBucketIcon className="size-4" />, label: "Color" },

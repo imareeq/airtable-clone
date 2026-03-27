@@ -37,6 +37,7 @@ export const TableService = {
     columnIds: string[],
     cursor: number = 0,
     search?: string,
+    sortConfig?: { columnId: string; direction: "asc" | "desc" }[],
   ) {
     const cols = [
       `"id"`,
@@ -48,13 +49,27 @@ export const TableService = {
     const params: unknown[] = [cursor];
     if (search) params.push(`%${search}%`);
 
+    const validColumnIdSet = new Set(columnIds);
+    const validatedSorts = (sortConfig ?? []).filter(
+      (s) =>
+        validColumnIdSet.has(s.columnId) &&
+        ["asc", "desc"].includes(s.direction),
+    );
+
+    const orderBy =
+      validatedSorts.length > 0
+        ? validatedSorts
+            .map((s) => `"${s.columnId}" ${s.direction.toUpperCase()}`)
+            .join(", ")
+        : `"order_index" ASC`;
+
     return db.$queryRawUnsafe<SpreadsheetRow[]>(
       `SELECT ${cols}
-       FROM "spreadsheet_${tableId}"
-       ${whereClause}
-       ORDER BY "order_index" ASC
-       LIMIT ${ROW_LIMIT}
-       OFFSET $1`,
+     FROM "spreadsheet_${tableId}"
+     ${whereClause}
+     ORDER BY ${orderBy}
+     LIMIT ${ROW_LIMIT}
+     OFFSET $1`,
       ...params,
     );
   },
