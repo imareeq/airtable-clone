@@ -44,20 +44,17 @@ export const TableService = {
       ...columnIds.map((id) => `"${id}"`),
     ].join(", ");
 
-    const whereClause = search
-      ? `WHERE search_vector @@ to_tsquery('english', $2)`
-      : "";
-
+    const whereClause = search ? `WHERE "search_vector" ILIKE $2` : "";
     const params: unknown[] = [cursor];
-    if (search) params.push(`${search}:*`);
+    if (search) params.push(`%${search}%`);
 
     return db.$queryRawUnsafe<SpreadsheetRow[]>(
       `SELECT ${cols}
-     FROM "spreadsheet_${tableId}"
-     ${whereClause}
-     ORDER BY "order_index" ASC
-     LIMIT ${ROW_LIMIT}
-     OFFSET $1`,
+       FROM "spreadsheet_${tableId}"
+       ${whereClause}
+       ORDER BY "order_index" ASC
+       LIMIT ${ROW_LIMIT}
+       OFFSET $1`,
       ...params,
     );
   },
@@ -81,9 +78,7 @@ export const TableService = {
   async update(db: DBClient, tableId: string, name?: string) {
     return db.table.update({
       where: { id: tableId },
-      data: {
-        name,
-      },
+      data: { name },
     });
   },
 
@@ -110,8 +105,8 @@ export const TableService = {
     const colList = columnIds.map((id) => `"${id}"`).join(", ");
     await db.$executeRawUnsafe(
       `UPDATE "spreadsheet_${tableId}"
-     SET search_vector = to_tsvector('english', concat_ws(' ', ${colList}))
-     WHERE "id" = $1`,
+       SET search_vector = concat_ws(' ', ${colList})
+       WHERE "id" = $1`,
       rowId,
     );
   },
@@ -133,14 +128,14 @@ export const TableService = {
     const columnDefs = [
       `"id" TEXT PRIMARY KEY`,
       `"order_index" INT GENERATED ALWAYS AS IDENTITY`,
-      `"search_vector" tsvector`,
+      `"search_vector" TEXT`,
       ...columns.map((col) => `"${col.id}" TEXT`),
     ].join(", ");
 
+    await db.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
     await db.$executeRawUnsafe(`CREATE TABLE "${tableName}" (${columnDefs})`);
-
     await db.$executeRawUnsafe(
-      `CREATE INDEX "search_${tableId}_idx" ON "${tableName}" USING GIN("search_vector")`,
+      `CREATE INDEX "search_${tableId}_idx" ON "${tableName}" USING GIN("search_vector" gin_trgm_ops)`,
     );
   },
 
@@ -151,11 +146,7 @@ export const TableService = {
     numRows: number = 10,
   ) {
     const tableName = `spreadsheet_${tableId}`;
-
-    const colNames = [
-      `"id", "search_vector"`,
-      ...columns.map((c) => `"${c.id}"`),
-    ].join(", ");
+    const colNames = [`"id"`, ...columns.map((c) => `"${c.id}"`)].join(", ");
 
     const numCols = columns.length + 1;
     const BATCH_SIZE = Math.floor(65000 / numCols);
@@ -166,34 +157,40 @@ export const TableService = {
 
       const valuePlaceholders: string[] = [];
       const flattenedValues: any[] = [];
+      let placeholderIndex = 1;
 
       for (const row of rows) {
-        const colPlaceholders = row.values
-          .map((_, i) => `$${flattenedValues.length + i + 2}`)
-          .join(", ");
-        const searchCols = row.values
-          .map(
-            (_, i) => `COALESCE($${flattenedValues.length + i + 2}::text, '')`,
-          )
-          .join(", ");
+        const rowPlaceholders: string[] = [];
 
-        valuePlaceholders.push(
-          `($${flattenedValues.length + 1}, to_tsvector('english', concat_ws(' ', ${searchCols})), ${colPlaceholders})`,
-        );
-        flattenedValues.push(row.id, ...row.values);
+        flattenedValues.push(row.id);
+        rowPlaceholders.push(`$${placeholderIndex++}`);
+
+        for (const val of row.values) {
+          flattenedValues.push(val);
+          rowPlaceholders.push(`$${placeholderIndex++}`);
+        }
+
+        valuePlaceholders.push(`(${rowPlaceholders.join(", ")})`);
       }
 
       const query = `INSERT INTO "${tableName}" (${colNames}) VALUES ${valuePlaceholders.join(", ")}`;
 
-      await db.$executeRawUnsafe(query, ...flattenedValues);
+      if (flattenedValues.length > 0) {
+        await db.$executeRawUnsafe(query, ...flattenedValues);
+      }
     }
+
+    const colList = columns.map((c) => `"${c.id}"`).join(", ");
+    await db.$executeRawUnsafe(
+      `UPDATE "${tableName}" SET search_vector = concat_ws(' ', ${colList})`,
+    );
   },
 
   async getRowCount(db: DBClient, tableId: string, search?: string) {
     if (search) {
       const result = await db.$queryRawUnsafe<[{ count: bigint }]>(
-        `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}" WHERE search_vector @@ to_tsquery('english', $1)`,
-        `${search}:*`,
+        `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}" WHERE "search_vector" ILIKE $1`,
+        `%${search}%`,
       );
       return Number(result[0]?.count ?? 0);
     }
@@ -202,36 +199,5 @@ export const TableService = {
       `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}"`,
     );
     return Number(result[0]?.count ?? 0);
-  },
-
-  async searchRows(
-    db: DBClient,
-    tableId: string,
-    query: string,
-    columnIds: string[],
-  ): Promise<{ row_number: number; columnId: string }[]> {
-    const unnestArray = columnIds
-      .map((id) => `CASE WHEN "${id}" ILIKE $2 THEN '${id}' END`)
-      .join(", ");
-
-    const rows = await db.$queryRawUnsafe<
-      { row_number: bigint; column_id: string | null }[]
-    >(
-      `SELECT 
-      ROW_NUMBER() OVER (ORDER BY "order_index") as row_number,
-      unnest(ARRAY[${unnestArray}]) as column_id
-      FROM "spreadsheet_${tableId}"
-      WHERE search_vector @@ plainto_tsquery('english', $1)
-      ORDER BY "order_index"`,
-      query,
-      `%${query}%`,
-    );
-
-    return rows
-      .filter((r) => r.column_id !== null)
-      .map((r) => ({
-        row_number: Number(r.row_number),
-        columnId: r.column_id!,
-      }));
   },
 };

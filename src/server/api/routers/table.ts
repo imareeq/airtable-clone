@@ -51,10 +51,14 @@ export const TableRouter = createTRPCRouter({
 
       const rows = res.map((row, index) => ({
         ...row,
-        row_number: currentOffset + index + 1,
+        row_number: input.search ? index + 1 : currentOffset + index + 1,
       }));
 
-      const totalCount = await TableService.getRowCount(ctx.db, ctx.table.id, input.search);
+      const totalCount = await TableService.getRowCount(
+        ctx.db,
+        ctx.table.id,
+        input.search,
+      );
 
       const nextCursor =
         currentOffset + rows.length < totalCount
