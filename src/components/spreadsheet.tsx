@@ -28,6 +28,7 @@ import { isValidNumberInput, validateValue } from "~/lib/cell-utils";
 import { useEditingCell } from "~/hooks/use-editing-cell";
 import { useSpreadsheetMutations } from "~/hooks/use-spreadsheet-mutation";
 import { useTable } from "~/hooks/use-table";
+import { useSearch } from "~/contexts/table-search-context";
 
 interface SpreadsheetProps<TData extends { id: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -52,6 +53,7 @@ export function Spreadsheet<
   const tableRef = useRef<HTMLTableElement>(null);
   const headerRowRef = useRef<HTMLTableRowElement>(null);
   const table = useTable();
+  const { search } = useSearch();
 
   const spreadsheet = useReactTable({
     data,
@@ -152,10 +154,6 @@ export function Spreadsheet<
     [activeCell, rows.length, visibleCols.length],
   );
 
-  const handleCellBlur = useCallback(() => {
-    exitEditing();
-  }, [exitEditing]);
-
   const handleCellKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -174,20 +172,9 @@ export function Spreadsheet<
     [exitEditing],
   );
 
-  const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
-    tableRef.current?.focus({ preventScroll: true });
-    setActiveCell({ rowIndex, colIndex, mode: "selected" });
-  }, []);
-
-  const handleCellDoubleClick = useCallback(
-    (rowIndex: number, colIndex: number) => {
-      setActiveCell({ rowIndex, colIndex, mode: "editing" });
-    },
-    [],
-  );
-
   const { createRow, deleteRow, updateCell } = useSpreadsheetMutations(
     table.id,
+    search,
   );
 
   return (
