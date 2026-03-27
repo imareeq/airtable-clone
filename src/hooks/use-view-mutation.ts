@@ -8,9 +8,8 @@ export function useViewMutations(baseId: string, tableId: string) {
 
   const createView = api.view.create.useMutation({
     onSuccess: async (newView) => {
-      await utils.view.getById.invalidate();
+      await utils.table.getById.invalidate({ tableId });
       router.push(`/${baseId}/${tableId}/${newView.id}`);
-      router.refresh();
     },
     onError: (error) => {
       toast.error(`Failed to create view: ${error.message}`);

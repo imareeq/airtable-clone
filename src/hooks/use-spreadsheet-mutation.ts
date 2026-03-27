@@ -9,7 +9,6 @@ export function useSpreadsheetMutations(tableId: string) {
   const createRow = api.table.createRow.useMutation({
     onSuccess: () => {
       void utils.table.getRows.invalidate({ tableId });
-      router.refresh();
     },
     onError: (error) => {
       toast.error(`Failed to create row: ${error.message}`);
@@ -91,7 +90,6 @@ export function useSpreadsheetMutations(tableId: string) {
 
   const createCol = api.column.create.useMutation({
     onSuccess: () => {
-      router.refresh();
       void utils.table.getRows.invalidate({ tableId });
     },
     onError: (error) => {
@@ -101,7 +99,6 @@ export function useSpreadsheetMutations(tableId: string) {
 
   const deleteCol = api.column.delete.useMutation({
     onSuccess: () => {
-      router.refresh();
       void utils.table.getRows.invalidate({ tableId });
     },
     onError: (error) => {
