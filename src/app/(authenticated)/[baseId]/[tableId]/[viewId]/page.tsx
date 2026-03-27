@@ -30,6 +30,11 @@ export default function Page() {
   const utils = api.useUtils();
   const { search } = useSearch();
   const isJumping = useRef<boolean>(false);
+  const view = useView();
+
+  const sortConfig = Array.isArray(view?.sortConfig)
+    ? (view.sortConfig as { columnId: string; direction: "asc" | "desc" }[])
+    : [];
 
   const {
     data,
@@ -39,7 +44,11 @@ export default function Page() {
     hasPreviousPage,
     isFetching,
   } = api.table.getRows.useInfiniteQuery(
-    { tableId: table.id, search: search || undefined },
+    {
+      tableId: table.id,
+      search: search || undefined,
+      sortConfig: sortConfig.length > 0 ? sortConfig : undefined,
+    },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       getPreviousPageParam: (firstPage) => firstPage.prevCursor,
@@ -77,8 +86,6 @@ export default function Page() {
       );
     });
   }, [virtualRows, rows]);
-
-  const view = useView();
 
   const hiddenColumns = Array.isArray(view?.hiddenColumns)
     ? (view.hiddenColumns as string[])

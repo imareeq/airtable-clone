@@ -24,6 +24,9 @@ import { ColumnType } from "generated/prisma";
 import { columnTypeConfig } from "~/lib/column-type-config";
 import type { Column } from "generated/prisma";
 import { cn } from "~/lib/utils";
+import { useParams } from "next/navigation";
+import { useView } from "~/hooks/use-view";
+import { useViewMutations } from "~/hooks/use-view-mutation";
 
 type SortDirection = "asc" | "desc";
 
@@ -175,6 +178,13 @@ interface SortPopoverProps {
 
 export function SortPopover({ children }: SortPopoverProps) {
   const table = useTable();
+  const view = useView();
+  const { baseId, tableId, viewId } = useParams<{
+    baseId: string;
+    tableId: string;
+    viewId: string;
+  }>();
+  const { updateView } = useViewMutations(baseId, tableId);
   const [sorts, setSorts] = useState<SortEntry[]>([]);
   const [autoSort, setAutoSort] = useState(true);
   const [showFieldSearch, setShowFieldSearch] = useState(false);
@@ -184,24 +194,51 @@ export function SortPopover({ children }: SortPopoverProps) {
     left: number;
   } | null>(null);
 
+  useEffect(() => {
+    if (!view?.sortConfig) return;
+    const config = view.sortConfig as {
+      columnId: string;
+      direction: SortDirection;
+    }[];
+    const initialSorts = config
+      .map((s) => ({
+        column: table?.columns.find((c) => c.id === s.columnId),
+        direction: s.direction,
+      }))
+      .filter((s) => s.column != null) as SortEntry[];
+    setSorts(initialSorts);
+  }, [view?.sortConfig]);
+
+  const toSortConfig = (entries: SortEntry[]) =>
+    entries.map((s) => ({ columnId: s.column.id, direction: s.direction }));
+
+  const addSort = (col: Column) => {
+    const newSorts = [
+      ...sorts,
+      { column: col, direction: "asc" as SortDirection },
+    ];
+    setSorts(newSorts);
+    updateView.mutate({ viewId, sortConfig: toSortConfig(newSorts) });
+  };
+
+  const removeSort = (columnId: string) => {
+    const newSorts = sorts.filter((s) => s.column.id !== columnId);
+    setSorts(newSorts);
+    updateView.mutate({ viewId, sortConfig: toSortConfig(newSorts) });
+  };
+
+  const updateDirection = (columnId: string, direction: SortDirection) => {
+    const newSorts = sorts.map((s) =>
+      s.column.id === columnId ? { ...s, direction } : s,
+    );
+    setSorts(newSorts);
+    updateView.mutate({ viewId, sortConfig: toSortConfig(newSorts) });
+  };
+
   const sortedColumnIds = new Set(sorts.map((s) => s.column.id));
   const availableColumns = (table?.columns ?? []).filter(
     (col) => !sortedColumnIds.has(col.id),
   );
-
-  const addSort = (col: Column) => {
-    setSorts((prev) => [...prev, { column: col, direction: "asc" }]);
-  };
-
-  const removeSort = (columnId: string) => {
-    setSorts((prev) => prev.filter((s) => s.column.id !== columnId));
-  };
-
-  const updateDirection = (columnId: string, direction: SortDirection) => {
-    setSorts((prev) =>
-      prev.map((s) => (s.column.id === columnId ? { ...s, direction } : s)),
-    );
-  };
 
   const handleAddClick = () => {
     if (!addButtonRef.current) return;
@@ -220,7 +257,7 @@ export function SortPopover({ children }: SortPopoverProps) {
           align="end"
           sideOffset={6}
           className={cn(
-            "h-auto min-h-48.75 gap-2 p-3 shadow-lg relative",
+            "relative h-auto min-h-48.75 gap-2 p-3 shadow-lg",
             numSorts === 0 ? "w-80" : "w-113",
           )}
           onInteractOutside={(e) => {
@@ -264,10 +301,9 @@ export function SortPopover({ children }: SortPopoverProps) {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 flex-1 justify-between gap-2 text-[13px] font-normal"
+                            className="focus:text-foreground h-8 flex-1 justify-between gap-2 text-[13px] font-normal"
                           >
                             <span className="flex items-center gap-1.5">
-                              {columnTypeIcon[sort.column.type]}
                               {sort.column.name}
                             </span>
                             <span className="text-muted-foreground text-[11px]">
@@ -285,13 +321,16 @@ export function SortPopover({ children }: SortPopoverProps) {
                                 col.id !== sort.column.id
                               }
                               onClick={() => {
-                                setSorts((prev) =>
-                                  prev.map((s) =>
-                                    s.column.id === sort.column.id
-                                      ? { ...s, column: col }
-                                      : s,
-                                  ),
+                                const newSorts = sorts.map((s) =>
+                                  s.column.id === sort.column.id
+                                    ? { ...s, column: col }
+                                    : s,
                                 );
+                                setSorts(newSorts);
+                                updateView.mutate({
+                                  viewId,
+                                  sortConfig: toSortConfig(newSorts),
+                                });
                               }}
                             >
                               {columnTypeIcon[col.type]}
@@ -335,9 +374,9 @@ export function SortPopover({ children }: SortPopoverProps) {
 
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="default"
                         onClick={() => removeSort(sort.column.id)}
-                        className="text-muted-foreground hover:text-foreground shrink-0 pt-0 hover:bg-inherit"
+                        className="text-muted-foreground hover:text-foreground h-8 shrink-0 pt-0"
                       >
                         <XIcon className="size-4" />
                       </Button>
@@ -349,14 +388,14 @@ export function SortPopover({ children }: SortPopoverProps) {
                   ref={addButtonRef}
                   variant="ghost"
                   onClick={handleAddClick}
-                  className="text-muted-foreground hover:text-foreground items-center gap-2 text-[13px] hover:bg-inherit"
+                  className="text-foreground/50 hover:text-foreground items-center gap-2 pl-0 text-[13px] hover:bg-inherit"
                 >
                   <PlusIcon className="size-4" />
                   Add another sort
                 </Button>
               </div>
 
-              <div className="absolute bottom-0 left-0 h-11 w-full bg-muted-foreground/10 flex items-center justify-start gap-2 px-4 py-2.5">
+              <div className="bg-muted-foreground/10 absolute bottom-0 left-0 flex h-11 w-full items-center justify-start gap-2 px-4 py-2.5">
                 <Switch
                   checked={autoSort}
                   onCheckedChange={setAutoSort}

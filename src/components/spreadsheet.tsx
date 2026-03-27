@@ -29,6 +29,7 @@ import { useSpreadsheetMutations } from "~/hooks/use-spreadsheet-mutation";
 import { useTable } from "~/hooks/use-table";
 import { useSearch } from "~/contexts/table-search-context";
 import { columnTypeConfig } from "~/lib/column-type-config";
+import { useView } from "~/hooks/use-view";
 
 interface SpreadsheetProps<TData extends { id: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -66,6 +67,13 @@ export function Spreadsheet<
 
   const { editingValue, setEditingValue, validationError, setValidationError } =
     useEditingCell(activeCell, rows, (data[0]?.row_number ?? 0) - 1);
+
+  const view = useView();
+  const sortedColumnIds = new Set(
+    Array.isArray(view?.sortConfig)
+      ? (view.sortConfig as { columnId: string }[]).map((s) => s.columnId)
+      : [],
+  );
 
   const navigate = useCallback(
     (rowDelta: number, colDelta: number) => {
@@ -220,7 +228,11 @@ export function Spreadsheet<
               {headerGroup.headers.map((header) => (
                 <TableHead
                   key={header.id}
-                  className="hover:bg-muted text-foreground w-44 border-r px-2 text-[12px] font-normal"
+                  className={cn(
+                    "hover:bg-muted text-foreground w-44 border-r px-2 text-[12px] font-normal",
+                    sortedColumnIds.has(header.column.id) &&
+                      "bg-appearance-peach-light",
+                  )}
                 >
                   {header.isPlaceholder
                     ? null
@@ -347,6 +359,8 @@ export function Spreadsheet<
                           className={cn(
                             "border-border relative w-44 border-r p-0",
                             isSelected && "z-10",
+                            sortedColumnIds.has(cell.column.id) &&
+                              "bg-orange-50",
                           )}
                           onClick={handleClick}
                           onDoubleClick={handleDoubleClick}

@@ -79,6 +79,7 @@ export function useViewMutations(baseId: string, tableId: string) {
     onSettled: async (_data, _error, input) => {
       await utils.view.getById.invalidate({ viewId: input.viewId });
       await utils.table.getById.invalidate({ tableId });
+      await utils.table.getRows.invalidate({ tableId });
     },
   });
 
