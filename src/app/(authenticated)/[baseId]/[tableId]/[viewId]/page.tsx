@@ -12,7 +12,6 @@ import SeedDataButton from "~/components/seed-data-button";
 import { useDebounceCallback } from "usehooks-ts";
 import { ROW_LIMIT } from "~/services/table-service";
 import { useSearch } from "~/contexts/table-search-context";
-import { useParams } from "next/navigation";
 import { useView } from "~/hooks/use-view";
 import { useTable } from "~/hooks/use-table";
 
