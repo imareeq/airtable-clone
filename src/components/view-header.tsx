@@ -45,6 +45,7 @@ import { useView } from "~/hooks/use-view";
 import { cn } from "~/lib/utils";
 import { Spinner } from "./ui/spinner";
 import { useTable } from "~/hooks/use-table";
+import { SortPopover } from "./sort-popover";
 
 const VIEW_MENU_ITEMS = [
   {
@@ -134,7 +135,11 @@ export default function ViewHeader() {
     },
     { icon: <FunnelSimpleIcon className="size-4" />, label: "Filter" },
     { icon: <ListBulletsIcon className="size-4" />, label: "Group" },
-    { icon: <ArrowsDownUpIcon className="size-4" />, label: "Sort" },
+    {
+      icon: <ArrowsDownUpIcon className="size-4" />,
+      label: "Sort",
+      popover: "sort",
+    },
     { icon: <PaintBucketIcon className="size-4" />, label: "Color" },
     { icon: <TextAlignJustifyIcon className="size-4" />, label: null },
     { icon: <ExportIcon className="size-4" />, label: "Share and sync" },
@@ -244,6 +249,10 @@ export default function ViewHeader() {
 
           if (item.popover === "hide-fields") {
             return <HideFieldsPopover key={i}>{button}</HideFieldsPopover>;
+          }
+
+          if (item.popover === "sort") {
+            return <SortPopover key={i}>{button}</SortPopover>;
           }
 
           return button;
