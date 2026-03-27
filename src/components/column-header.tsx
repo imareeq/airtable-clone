@@ -34,6 +34,7 @@ import type { ReactNode } from "react";
 import { Button } from "./ui/button";
 import { useSpreadsheetMutations } from "~/hooks/use-spreadsheet-mutation";
 import { useTable } from "~/hooks/use-table";
+import { columnTypeConfig } from "~/lib/column-type-config";
 
 const columnTypeIcon: Record<ColumnType, ReactNode> = {
   [ColumnType.TEXT]: <TextAaIcon className="size-4" />,
@@ -53,8 +54,8 @@ type MenuItem =
 
 export function ColumnHeader({ column }: { column: Column }) {
   const table = useTable();
-
   const { deleteCol } = useSpreadsheetMutations(table.id);
+  const columnConfig = columnTypeConfig[column.type];
 
   const menuItems: MenuItem[] = [
     { label: "Edit field", icon: PencilSimpleIcon },
@@ -79,11 +80,11 @@ export function ColumnHeader({ column }: { column: Column }) {
     },
     { separator: true },
     {
-      label: column.type === ColumnType.NUMBER ? "Sort 1 → 9" : "Sort A → Z",
+      label: columnConfig.sortAsc,
       icon: ArrowUpIcon,
     },
     {
-      label: column.type === ColumnType.NUMBER ? "Sort 9 → 1" : "Sort Z → A",
+      label: columnConfig.sortDesc,
       icon: ArrowDownIcon,
     },
     { separator: true },

@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { ColumnType } from "generated/prisma";
 import { z } from "zod";
+import { columnTypeConfig } from "~/lib/column-type-config";
 import {
   createTRPCRouter,
   baseProcedure,
@@ -121,14 +122,9 @@ export const TableRouter = createTRPCRouter({
         });
       }
 
-      if (validColumn.type === ColumnType.NUMBER && input.value !== "") {
-        const parsed = z.coerce.number().safeParse(input.value);
-        if (!parsed.success) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Value must be a number",
-          });
-        }
+      const validationError = columnTypeConfig[validColumn.type].validate(input.value);
+      if (validationError) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: validationError });
       }
 
       await TableService.updateCell(
