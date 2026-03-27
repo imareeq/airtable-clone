@@ -14,6 +14,7 @@ import { ROW_LIMIT } from "~/services/table-service";
 import { useSearch } from "~/contexts/table-search-context";
 import { useView } from "~/hooks/use-view";
 import { useTable } from "~/hooks/use-table";
+import { columnTypeConfig } from "~/lib/column-type-config";
 
 export type ActiveCell = {
   rowIndex: number;
@@ -91,11 +92,8 @@ export default function Page() {
       header: () => <ColumnHeader column={col} />,
       cell: ({ getValue }) => {
         const value = getValue<string>();
-        if (col.type === ColumnType.NUMBER && value !== "" && value != null) {
-          const num = Number(value);
-          return isNaN(num) ? value : num.toLocaleString();
-        }
-        return value;
+        if (value === "" || value == null) return value;
+        return columnTypeConfig[col.type].format(value);
       },
     }));
 
