@@ -36,7 +36,6 @@ import {
 import { useTable } from "~/hooks/use-table";
 import { ColumnType } from "generated/prisma";
 import { columnTypeConfig } from "~/lib/column-type-config";
-import type { Column } from "generated/prisma";
 import OmniIcon from "./omni-icon";
 import { useBase } from "~/hooks/use-base";
 import { getBaseColorClass } from "~/lib/color-utils";
@@ -46,6 +45,7 @@ import { useView } from "~/hooks/use-view";
 import { useViewMutations } from "~/hooks/use-view-mutation";
 import { useParams } from "next/navigation";
 import { useDebounceCallback } from "usehooks-ts";
+import { useSortFilterState } from "~/contexts/sort-filter-state-context";
 
 export type FilterCondition = {
   order: number;
@@ -143,9 +143,7 @@ interface FilterPopoverProps {
 
 export function FilterPopover({ children }: FilterPopoverProps) {
   const table = useTable();
-  const [conditions, setConditions] = useState<FilterCondition[]>([]);
   const base = useBase();
-  const nextOrder = useRef(0);
   const view = useView();
   const { viewId } = useParams<{
     baseId: string;
@@ -153,13 +151,14 @@ export function FilterPopover({ children }: FilterPopoverProps) {
     viewId: string;
   }>();
   const { updateView } = useViewMutations(table.id, viewId);
+  const { filterOpen, setFilterOpen } = useSortFilterState();
+  const [inputValues, setInputValues] = useState<Record<number, string>>({});
 
-  useEffect(() => {
-    if (view?.filterConfig) {
-      setConditions(view.filterConfig as FilterCondition[]);
-      nextOrder.current = (view.filterConfig as FilterCondition[]).length;
-    }
-  }, [view?.id]);
+  const conditions = (
+    Array.isArray(view?.filterConfig) ? view.filterConfig : []
+  ) as FilterCondition[];
+
+  const columns = table?.columns ?? [];
 
   const saveConditions = (conditions: FilterCondition[]) => {
     updateView.mutate({
@@ -168,85 +167,70 @@ export function FilterPopover({ children }: FilterPopoverProps) {
     });
   };
 
-  const columns = table?.columns ?? [];
-
   const addCondition = () => {
     if (!columns[0]) return;
     const col = columns[0];
     const defaultOperator =
       columnTypeConfig[col.type].filterOperators[0]?.value ?? "contains";
-    setConditions((prev) => {
-      const next = [
-        ...prev,
-        {
-          order: nextOrder.current++,
-          columnId: col.id,
-          operator: defaultOperator,
-          value: "",
-          conjunction: "and" as const,
-        },
-      ];
-      saveConditions(next);
-      return next;
-    });
+    saveConditions([
+      ...conditions,
+      {
+        order: conditions.length,
+        columnId: col.id,
+        operator: defaultOperator,
+        value: "",
+        conjunction: "and" as const,
+      },
+    ]);
   };
 
   const removeCondition = (order: number) => {
-    setConditions((prev) => {
-      const next = prev.filter((c) => c.order !== order);
-      saveConditions(next);
+    setInputValues((prev) => {
+      const next = { ...prev };
+      delete next[order];
       return next;
     });
+    saveConditions(conditions.filter((c) => c.order !== order));
   };
 
   const updateColumn = (order: number, columnId: string) => {
-    setConditions((prev) => {
-      const next = prev.map((c) => {
-        if (c.order !== order) return c;
-        const col = columns.find((col) => col.id === columnId)!;
-        const defaultOperator =
-          columnTypeConfig[col.type].filterOperators[0]?.value ?? "contains";
-        return { ...c, columnId, operator: defaultOperator, value: "" };
-      });
-      saveConditions(next);
-      return next;
-    });
+    const col = columns.find((c) => c.id === columnId)!;
+    const defaultOperator =
+      columnTypeConfig[col.type].filterOperators[0]?.value ?? "contains";
+    saveConditions(
+      conditions.map((c) =>
+        c.order === order
+          ? { ...c, columnId, operator: defaultOperator, value: "" }
+          : c,
+      ),
+    );
   };
 
   const updateOperator = (order: number, operator: string) => {
-    setConditions((prev) => {
-      const next = prev.map((c) =>
-        c.order === order ? { ...c, operator } : c,
-      );
-      saveConditions(next);
-      return next;
-    });
+    saveConditions(
+      conditions.map((c) => (c.order === order ? { ...c, operator } : c)),
+    );
   };
 
   const debouncedSave = useDebounceCallback(saveConditions, 500);
 
   const updateValue = (order: number, value: string) => {
-    setConditions((prev) => {
-      const next = prev.map((c) => (c.order === order ? { ...c, value } : c));
-      debouncedSave(next);
-      return next;
-    });
+    setInputValues((prev) => ({ ...prev, [order]: value }));
+    debouncedSave(
+      conditions.map((c) => (c.order === order ? { ...c, value } : c)),
+    );
   };
 
   const updateConjunction = (order: number, conjunction: "and" | "or") => {
-    setConditions((prev) => {
-      const next = prev.map((c) =>
-        c.order === order ? { ...c, conjunction } : c,
-      );
-      saveConditions(next);
-      return next;
-    });
+    saveConditions(
+      conditions.map((c) => (c.order === order ? { ...c, conjunction } : c)),
+    );
   };
 
   const numConditions = conditions.length;
 
   return (
-    <Popover>
+    <Popover open={filterOpen} onOpenChange={setFilterOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         align="end"
@@ -355,7 +339,9 @@ export function FilterPopover({ children }: FilterPopoverProps) {
                       />
                       {requiresValue ? (
                         <Input
-                          value={condition.value}
+                          value={
+                            inputValues[condition.order] ?? condition.value
+                          }
                           onChange={(e) => {
                             const newValue = e.target.value;
                             if (
@@ -369,7 +355,7 @@ export function FilterPopover({ children }: FilterPopoverProps) {
                           className="bg-background -ml-px h-8 flex-1 rounded-none text-[13px]"
                         />
                       ) : (
-                        <div className="flex-1" />
+                        <div className="flex-1 -ml-px h-8 rounded-none border" />
                       )}
                       <Button
                         variant="ghost"
