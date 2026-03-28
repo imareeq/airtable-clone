@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ColumnType } from "generated/prisma";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ColumnHeader } from "~/components/column-header";
 import { Spreadsheet } from "~/components/spreadsheet";
@@ -36,6 +35,21 @@ export default function Page() {
     ? (view.sortConfig as { columnId: string; direction: "asc" | "desc" }[])
     : [];
 
+  const filterConfig = Array.isArray(view?.filterConfig)
+    ? (view.filterConfig as {
+        columnId: string;
+        operator: string;
+        value: string;
+        conjunction?: "and" | "or";
+      }[])
+    : [];
+
+  const activeFilterConfig = filterConfig.filter(
+    (f) =>
+      f.value.trim() !== "" ||
+      ["is_empty", "is_not_empty"].includes(f.operator),
+  );
+
   const {
     data,
     fetchNextPage,
@@ -48,6 +62,8 @@ export default function Page() {
       tableId: table.id,
       search: search || undefined,
       sortConfig: sortConfig.length > 0 ? sortConfig : undefined,
+      filterConfig:
+        activeFilterConfig.length > 0 ? activeFilterConfig : undefined,
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,

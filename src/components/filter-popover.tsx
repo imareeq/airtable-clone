@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   PlusIcon,
   TrashIcon,
@@ -41,8 +41,13 @@ import OmniIcon from "./omni-icon";
 import { useBase } from "~/hooks/use-base";
 import { getBaseColorClass } from "~/lib/color-utils";
 import { cn } from "~/lib/utils";
+import { isValidNumberInput } from "~/lib/cell-utils";
+import { useView } from "~/hooks/use-view";
+import { useViewMutations } from "~/hooks/use-view-mutation";
+import { useParams } from "next/navigation";
+import { useDebounceCallback } from "usehooks-ts";
 
-type FilterCondition = {
+export type FilterCondition = {
   order: number;
   columnId: string;
   operator: string;
@@ -141,6 +146,27 @@ export function FilterPopover({ children }: FilterPopoverProps) {
   const [conditions, setConditions] = useState<FilterCondition[]>([]);
   const base = useBase();
   const nextOrder = useRef(0);
+  const view = useView();
+  const { viewId } = useParams<{
+    baseId: string;
+    tableId: string;
+    viewId: string;
+  }>();
+  const { updateView } = useViewMutations(table.id, viewId);
+
+  useEffect(() => {
+    if (view?.filterConfig) {
+      setConditions(view.filterConfig as FilterCondition[]);
+      nextOrder.current = (view.filterConfig as FilterCondition[]).length;
+    }
+  }, [view?.id]);
+
+  const saveConditions = (conditions: FilterCondition[]) => {
+    updateView.mutate({
+      viewId: view.id,
+      filterConfig: conditions,
+    });
+  };
 
   const columns = table?.columns ?? [];
 
@@ -149,50 +175,72 @@ export function FilterPopover({ children }: FilterPopoverProps) {
     const col = columns[0];
     const defaultOperator =
       columnTypeConfig[col.type].filterOperators[0]?.value ?? "contains";
-    setConditions((prev) => [
-      ...prev,
-      {
-        order: nextOrder.current++,
-        columnId: col.id,
-        operator: defaultOperator,
-        value: "",
-        conjunction: "and",
-      },
-    ]);
+    setConditions((prev) => {
+      const next = [
+        ...prev,
+        {
+          order: nextOrder.current++,
+          columnId: col.id,
+          operator: defaultOperator,
+          value: "",
+          conjunction: "and" as const,
+        },
+      ];
+      saveConditions(next);
+      return next;
+    });
   };
 
   const removeCondition = (order: number) => {
-    setConditions((prev) => prev.filter((c) => c.order !== order));
+    setConditions((prev) => {
+      const next = prev.filter((c) => c.order !== order);
+      saveConditions(next);
+      return next;
+    });
   };
 
   const updateColumn = (order: number, columnId: string) => {
-    setConditions((prev) =>
-      prev.map((c) => {
+    setConditions((prev) => {
+      const next = prev.map((c) => {
         if (c.order !== order) return c;
         const col = columns.find((col) => col.id === columnId)!;
         const defaultOperator =
           columnTypeConfig[col.type].filterOperators[0]?.value ?? "contains";
         return { ...c, columnId, operator: defaultOperator, value: "" };
-      }),
-    );
+      });
+      saveConditions(next);
+      return next;
+    });
   };
 
   const updateOperator = (order: number, operator: string) => {
-    setConditions((prev) =>
-      prev.map((c) => (c.order === order ? { ...c, operator } : c)),
-    );
+    setConditions((prev) => {
+      const next = prev.map((c) =>
+        c.order === order ? { ...c, operator } : c,
+      );
+      saveConditions(next);
+      return next;
+    });
   };
 
+  const debouncedSave = useDebounceCallback(saveConditions, 500);
+
   const updateValue = (order: number, value: string) => {
-    setConditions((prev) =>
-      prev.map((c) => (c.order === order ? { ...c, value } : c)),
-    );
+    setConditions((prev) => {
+      const next = prev.map((c) => (c.order === order ? { ...c, value } : c));
+      debouncedSave(next);
+      return next;
+    });
   };
 
   const updateConjunction = (order: number, conjunction: "and" | "or") => {
-    setConditions((prev) =>
-      prev.map((c) => (c.order === order ? { ...c, conjunction } : c)),
-    );
+    setConditions((prev) => {
+      const next = prev.map((c) =>
+        c.order === order ? { ...c, conjunction } : c,
+      );
+      saveConditions(next);
+      return next;
+    });
   };
 
   const numConditions = conditions.length;
@@ -308,9 +356,15 @@ export function FilterPopover({ children }: FilterPopoverProps) {
                       {requiresValue ? (
                         <Input
                           value={condition.value}
-                          onChange={(e) =>
-                            updateValue(condition.order, e.target.value)
-                          }
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            if (
+                              col.type === ColumnType.NUMBER &&
+                              !isValidNumberInput(newValue)
+                            )
+                              return;
+                            updateValue(condition.order, newValue);
+                          }}
                           placeholder="Enter a value"
                           className="bg-background -ml-px h-8 flex-1 rounded-none text-[13px]"
                         />
@@ -321,7 +375,11 @@ export function FilterPopover({ children }: FilterPopoverProps) {
                         variant="ghost"
                         size="sm"
                         className="text-muted-foreground border-px hover:text-foreground -ml-px h-8 w-8 shrink-0 rounded-none p-0"
-                        onClick={() => removeCondition(condition.order)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          removeCondition(condition.order);
+                        }}
                       >
                         <TrashIcon className="size-4" />
                       </Button>
@@ -346,7 +404,11 @@ export function FilterPopover({ children }: FilterPopoverProps) {
               variant="ghost"
               size="sm"
               className="text-foreground/70 hover:text-foreground h-7 gap-1.5 px-0 text-[13px] font-semibold hover:bg-transparent"
-              onClick={addCondition}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                addCondition();
+              }}
               disabled={columns.length === 0}
             >
               <PlusIcon className="size-4" />
