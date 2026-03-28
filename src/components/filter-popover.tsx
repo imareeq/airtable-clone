@@ -355,7 +355,7 @@ export function FilterPopover({ children }: FilterPopoverProps) {
                           className="bg-background -ml-px h-8 flex-1 rounded-none text-[13px]"
                         />
                       ) : (
-                        <div className="flex-1 -ml-px h-8 rounded-none border" />
+                        <div className="-ml-px h-8 flex-1 rounded-none border" />
                       )}
                       <Button
                         variant="ghost"
