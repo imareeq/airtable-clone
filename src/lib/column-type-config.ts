@@ -1,12 +1,19 @@
 import { z } from "zod";
 import { ColumnType } from "generated/prisma";
 
+export type FilterOperator = {
+  value: string;
+  label: string;
+  requiresValue: boolean;
+};
+
 export type ColumnTypeConfig = {
   label: string;
   sortAsc: string;
   sortDesc: string;
   validate: (value: string) => string | null;
   format: (value: string) => string | number;
+  filterOperators: FilterOperator[];
 };
 
 export const columnTypeConfig = {
@@ -16,6 +23,13 @@ export const columnTypeConfig = {
     sortDesc: "Sort Z → A",
     validate: (_value: string) => null,
     format: (value: string) => value,
+    filterOperators: [
+      { value: "contains", label: "contains", requiresValue: true },
+      { value: "not_contains", label: "does not contain", requiresValue: true },
+      { value: "is_equal_to", label: "is equal to", requiresValue: true },
+      { value: "is_empty", label: "is empty", requiresValue: false },
+      { value: "is_not_empty", label: "is not empty", requiresValue: false },
+    ],
   },
   [ColumnType.NUMBER]: {
     label: "Number",
@@ -35,5 +49,9 @@ export const columnTypeConfig = {
             maximumFractionDigits: 2,
           });
     },
+    filterOperators: [
+      { value: "greater_than", label: ">", requiresValue: true },
+      { value: "less_than", label: "<", requiresValue: true },
+    ],
   },
 } satisfies Record<ColumnType, ColumnTypeConfig>;

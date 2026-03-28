@@ -46,6 +46,7 @@ import { cn } from "~/lib/utils";
 import { Spinner } from "./ui/spinner";
 import { useTable } from "~/hooks/use-table";
 import { SortPopover } from "./sort-popover";
+import { FilterPopover } from "./filter-popover";
 
 const VIEW_MENU_ITEMS = [
   {
@@ -137,7 +138,11 @@ export default function ViewHeader() {
           : "",
       popover: "hide-fields",
     },
-    { icon: <FunnelSimpleIcon className="size-4" />, label: "Filter" },
+    {
+      icon: <FunnelSimpleIcon className="size-4" />,
+      label: "Filter",
+      popover: "filter",
+    },
     { icon: <ListBulletsIcon className="size-4" />, label: "Group" },
     {
       icon: <ArrowsDownUpIcon className="size-4" />,
@@ -264,6 +269,10 @@ export default function ViewHeader() {
 
           if (item.popover === "sort") {
             return <SortPopover key={i}>{button}</SortPopover>;
+          }
+
+          if (item.popover === "filter") {
+            return <FilterPopover key={i}>{button}</FilterPopover>;
           }
 
           return button;
