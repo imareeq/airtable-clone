@@ -34,7 +34,12 @@ import type { ReactNode } from "react";
 import { Button } from "./ui/button";
 import { useSpreadsheetMutations } from "~/hooks/use-spreadsheet-mutation";
 import { useTable } from "~/hooks/use-table";
+import { useView } from "~/hooks/use-view";
 import { columnTypeConfig } from "~/lib/column-type-config";
+import { useViewMutations } from "~/hooks/use-view-mutation";
+import { useParams } from "next/navigation";
+import { useSortFilterState } from "~/contexts/sort-filter-state-context";
+import type { FilterCondition } from "./filter-popover";
 
 const columnTypeIcon: Record<ColumnType, ReactNode> = {
   [ColumnType.TEXT]: <TextAaIcon className="size-4" />,
@@ -54,8 +59,56 @@ type MenuItem =
 
 export function ColumnHeader({ column }: { column: Column }) {
   const table = useTable();
+  const view = useView();
   const { deleteCol } = useSpreadsheetMutations(table.id);
   const columnConfig = columnTypeConfig[column.type];
+  const { tableId, viewId } = useParams<{
+    baseId: string;
+    tableId: string;
+    viewId: string;
+  }>();
+  const { updateView } = useViewMutations(tableId, viewId);
+  const { setSortOpen, setFilterOpen } = useSortFilterState();
+
+  const sortBy = (direction: "asc" | "desc") => {
+    const existing = Array.isArray(view?.sortConfig)
+      ? (view.sortConfig as { columnId: string; direction: "asc" | "desc" }[])
+      : [];
+    const next = [
+      ...existing.filter((s) => s.columnId !== column.id),
+      { columnId: column.id, direction },
+    ];
+    updateView.mutate({ viewId, sortConfig: next });
+    setSortOpen(true);
+  };
+
+  const filterBy = () => {
+    const existing = Array.isArray(view?.filterConfig)
+      ? (view.filterConfig as FilterCondition[])
+      : [];
+    const next = [
+      ...existing,
+      {
+        order: existing.length,
+        columnId: column.id,
+        operator:
+          columnTypeConfig[column.type].filterOperators[0]?.value ?? "contains",
+        value: "",
+        conjunction: "and" as const,
+      },
+    ];
+    updateView.mutate({ viewId, filterConfig: next });
+    setFilterOpen(true);
+  };
+
+  const hideField = () => {
+    const existing = Array.isArray(view?.hiddenColumns)
+      ? (view.hiddenColumns as string[])
+      : [];
+    if (!existing.includes(column.id)) {
+      updateView.mutate({ viewId, hiddenColumns: [...existing, column.id] });
+    }
+  };
 
   const menuItems: MenuItem[] = [
     { label: "Edit field", icon: PencilSimpleIcon },
@@ -82,16 +135,22 @@ export function ColumnHeader({ column }: { column: Column }) {
     {
       label: columnConfig.sortAsc,
       icon: ArrowUpIcon,
+      onClick: () => sortBy("asc"),
     },
     {
       label: columnConfig.sortDesc,
       icon: ArrowDownIcon,
+      onClick: () => sortBy("desc"),
     },
     { separator: true },
-    { label: "Filter by this field", icon: FunnelSimpleIcon },
+    {
+      label: "Filter by this field",
+      icon: FunnelSimpleIcon,
+      onClick: filterBy,
+    },
     { label: "Group by this field", icon: SquaresFourIcon },
     { separator: true },
-    { label: "Hide field", icon: EyeSlashIcon },
+    { label: "Hide field", icon: EyeSlashIcon, onClick: hideField },
     {
       label: "Delete field",
       icon: TrashIcon,
@@ -109,7 +168,6 @@ export function ColumnHeader({ column }: { column: Column }) {
         >
           {columnTypeIcon[column.type]}
           <span>{column.name}</span>
-
           <CaretDownIcon className="text-muted-foreground ml-auto size-3 opacity-0 transition-opacity group-hover:opacity-100" />
         </Button>
       </DropdownMenuTrigger>

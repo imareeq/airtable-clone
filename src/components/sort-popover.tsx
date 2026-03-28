@@ -27,6 +27,7 @@ import { cn } from "~/lib/utils";
 import { useParams } from "next/navigation";
 import { useView } from "~/hooks/use-view";
 import { useViewMutations } from "~/hooks/use-view-mutation";
+import { useSortFilterState } from "~/contexts/sort-filter-state-context";
 
 type SortDirection = "asc" | "desc";
 
@@ -193,6 +194,7 @@ export function SortPopover({ children }: SortPopoverProps) {
     top: number;
     left: number;
   } | null>(null);
+  const { sortOpen, setSortOpen } = useSortFilterState();
 
   useEffect(() => {
     if (!view?.sortConfig) return;
@@ -251,7 +253,7 @@ export function SortPopover({ children }: SortPopoverProps) {
 
   return (
     <>
-      <Popover modal={false}>
+      <Popover modal={false} open={sortOpen} onOpenChange={setSortOpen}>
         <PopoverTrigger asChild>{children}</PopoverTrigger>
         <PopoverContent
           align="end"
