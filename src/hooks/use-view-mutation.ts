@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import type { FilterCondition } from "~/components/filter-popover";
 import { api } from "~/trpc/react";
 
 export function useViewMutations(baseId: string, tableId: string) {
@@ -35,8 +36,10 @@ export function useViewMutations(baseId: string, tableId: string) {
       await utils.table.getById.invalidate({ tableId });
       await utils.view.getById.invalidate();
     },
-    onSuccess: () => {
-      router.push(`/${baseId}/${tableId}`);
+    onSuccess: (_, { viewId }) => {
+      const table = utils.table.getById.getData({ tableId });
+      const firstView = table?.views.find((v) => v.id !== viewId);
+      router.push(`/${baseId}/${tableId}/${firstView?.id}`);
     },
   });
 
@@ -76,10 +79,41 @@ export function useViewMutations(baseId: string, tableId: string) {
       }
       toast.error(`Failed to update view: ${error.message}`);
     },
-    onSettled: async (_data, _error, input) => {
-      await utils.view.getById.invalidate({ viewId: input.viewId });
-      await utils.table.getById.invalidate({ tableId });
-      await utils.table.getRows.invalidate({ tableId });
+    onSettled: async (_data, error, input, context) => {
+      if (error) {
+        await utils.view.getById.invalidate({ viewId: input.viewId });
+        await utils.table.getById.invalidate({ tableId });
+        return;
+      }
+
+      if (!("filterConfig" in input) && !("sortConfig" in input)) return;
+
+      if ("filterConfig" in input) {
+        const newFilters = (input.filterConfig as FilterCondition[]) || [];
+        const oldFilters =
+          (context?.previousView?.filterConfig as FilterCondition[]) || [];
+
+        const getActiveOnly = (filters: FilterCondition[]) =>
+          filters.filter(
+            (c) =>
+              (c.value && c.value.trim() !== "") ||
+              ["is_empty", "is_not_empty"].includes(c.operator),
+          );
+
+        const activeNew = getActiveOnly(newFilters);
+        const activeOld = getActiveOnly(oldFilters);
+
+        const filtersActuallyChanged =
+          JSON.stringify(activeNew) !== JSON.stringify(activeOld);
+
+        if (filtersActuallyChanged) {
+          await utils.table.getRows.invalidate({ tableId });
+        }
+      }
+
+      if ("sortConfig" in input) {
+        await utils.table.getRows.invalidate({ tableId });
+      }
     },
   });
 

@@ -37,6 +37,16 @@ export const TableRouter = createTRPCRouter({
             }),
           )
           .optional(),
+        filterConfig: z
+          .array(
+            z.object({
+              columnId: z.string(),
+              operator: z.string(),
+              value: z.string(),
+              conjunction: z.enum(["and", "or"]).optional(),
+            }),
+          )
+          .optional(),
       }),
     )
     .output(
@@ -50,13 +60,20 @@ export const TableRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentOffset = input.offset ?? input.cursor ?? 0;
 
+      const activeFilters = input.filterConfig?.filter((f) => {
+        if (f.operator === "is_empty" || f.operator === "is_not_empty")
+          return true;
+        return f.value.trim() !== "";
+      });
+
       const res = await TableService.getRows(
         ctx.db,
-        ctx.table.id,
+        ctx.table,
         ctx.table.columns.map((col) => col.id),
         currentOffset,
         input.search,
         input.sortConfig,
+        activeFilters,
       );
 
       const rows = res.map((row, index) => ({
@@ -68,6 +85,7 @@ export const TableRouter = createTRPCRouter({
         ctx.db,
         ctx.table.id,
         input.search,
+        activeFilters,
       );
 
       const nextCursor =

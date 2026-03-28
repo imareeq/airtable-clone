@@ -75,6 +75,24 @@ export function Spreadsheet<
       : [],
   );
 
+  const filteredColumnIds = new Set(
+    Array.isArray(view?.filterConfig)
+      ? (
+          view.filterConfig as {
+            columnId: string;
+            operator: string;
+            value: string;
+          }[]
+        )
+          .filter(
+            (f) =>
+              f.value.trim() !== "" ||
+              ["is_empty", "is_not_empty"].includes(f.operator),
+          )
+          .map((f) => f.columnId)
+      : [],
+  );
+
   const navigate = useCallback(
     (rowDelta: number, colDelta: number) => {
       setActiveCell((prev) => {
@@ -231,7 +249,9 @@ export function Spreadsheet<
                   className={cn(
                     "hover:bg-muted text-foreground w-44 border-r px-2 text-[12px] font-normal",
                     sortedColumnIds.has(header.column.id) &&
-                      "bg-appearance-peach-light",
+                      "bg-appearance-peach-light/10",
+                    filteredColumnIds.has(header.column.id) &&
+                      "bg-appearance-green-light/10",
                   )}
                 >
                   {header.isPlaceholder
@@ -360,7 +380,9 @@ export function Spreadsheet<
                             "border-border relative w-44 border-r p-0",
                             isSelected && "z-10",
                             sortedColumnIds.has(cell.column.id) &&
-                              "bg-orange-50",
+                              "bg-appearance-orange/10",
+                            filteredColumnIds.has(cell.column.id) &&
+                              "bg-appearance-green/10",
                           )}
                           onClick={handleClick}
                           onDoubleClick={handleDoubleClick}

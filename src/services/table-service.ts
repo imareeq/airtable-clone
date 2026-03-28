@@ -8,6 +8,59 @@ import type { SpreadsheetRow } from "~/server/api/routers/table";
 
 export const ROW_LIMIT = 100;
 
+type FilterCondition = {
+  columnId: string;
+  operator: string;
+  value: string;
+  conjunction?: "and" | "or";
+};
+
+function buildFilterClauses(
+  filterConfig: FilterCondition[],
+  params: unknown[],
+): string {
+  const filterClauses = filterConfig.map((filter, i) => {
+    const col = `"${filter.columnId}"`;
+    let clause: string;
+
+    switch (filter.operator) {
+      case "contains":
+        params.push(`%${filter.value}%`);
+        clause = `${col} ILIKE $${params.length}`;
+        break;
+      case "not_contains":
+        params.push(`%${filter.value}%`);
+        clause = `${col} NOT ILIKE $${params.length}`;
+        break;
+      case "is_equal_to":
+        params.push(filter.value);
+        clause = `${col} = $${params.length}`;
+        break;
+      case "is_empty":
+        clause = `(${col} IS NULL OR ${col} = '')`;
+        break;
+      case "is_not_empty":
+        clause = `(${col} IS NOT NULL AND ${col} != '')`;
+        break;
+      case "greater_than":
+        params.push(filter.value);
+        clause = `${col}::numeric > $${params.length}`;
+        break;
+      case "less_than":
+        params.push(filter.value);
+        clause = `${col}::numeric < $${params.length}`;
+        break;
+      default:
+        clause = "TRUE";
+    }
+
+    if (i === 0) return clause;
+    return `${filter.conjunction === "or" ? "OR" : "AND"} ${clause}`;
+  });
+
+  return `(${filterClauses.join(" ")})`;
+}
+
 export const TableService = {
   async create(db: DBClient, baseId: string, name: string) {
     const table = await db.table.create({
@@ -33,11 +86,17 @@ export const TableService = {
 
   async getRows(
     db: DBClient,
-    tableId: string,
+    table: { id: string; columns: { id: string; type: ColumnType }[] },
     columnIds: string[],
     cursor: number = 0,
     search?: string,
     sortConfig?: { columnId: string; direction: "asc" | "desc" }[],
+    filterConfig?: {
+      columnId: string;
+      operator: string;
+      value: string;
+      conjunction?: "and" | "or";
+    }[],
   ) {
     const cols = [
       `"id"`,
@@ -45,31 +104,50 @@ export const TableService = {
       ...columnIds.map((id) => `"${id}"`),
     ].join(", ");
 
-    const whereClause = search ? `WHERE "search_vector" ILIKE $2` : "";
     const params: unknown[] = [cursor];
-    if (search) params.push(`%${search}%`);
+    const whereClauses: string[] = [];
+
+    if (search) {
+      params.push(`%${search}%`);
+      whereClauses.push(`"search_vector" ILIKE $${params.length}`);
+    }
 
     const validColumnIdSet = new Set(columnIds);
+
+    if (filterConfig && filterConfig.length > 0) {
+      whereClauses.push(buildFilterClauses(filterConfig, params));
+    }
+
+    const whereClause =
+      whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
     const validatedSorts = (sortConfig ?? []).filter(
       (s) =>
         validColumnIdSet.has(s.columnId) &&
         ["asc", "desc"].includes(s.direction),
     );
-
+    
     const orderBy =
       validatedSorts.length > 0
         ? validatedSorts
-            .map((s) => `"${s.columnId}" ${s.direction.toUpperCase()}`)
+            .map((s) => {
+              const col = table.columns.find((c) => c.id === s.columnId);
+              const colExpr =
+                col?.type === ColumnType.NUMBER
+                  ? `"${s.columnId}"::numeric`
+                  : `"${s.columnId}"`;
+              return `${colExpr} ${s.direction.toUpperCase()} NULLS LAST`;
+            })
             .join(", ")
         : `"order_index" ASC`;
 
     return db.$queryRawUnsafe<SpreadsheetRow[]>(
       `SELECT ${cols}
-     FROM "spreadsheet_${tableId}"
-     ${whereClause}
-     ORDER BY ${orderBy}
-     LIMIT ${ROW_LIMIT}
-     OFFSET $1`,
+   FROM "spreadsheet_${table.id}"
+   ${whereClause}
+   ORDER BY ${orderBy}
+   LIMIT ${ROW_LIMIT}
+   OFFSET $1`,
       ...params,
     );
   },
@@ -201,17 +279,30 @@ export const TableService = {
     );
   },
 
-  async getRowCount(db: DBClient, tableId: string, search?: string) {
+  async getRowCount(
+    db: DBClient,
+    tableId: string,
+    search?: string,
+    filterConfig?: FilterCondition[],
+  ) {
+    const params: unknown[] = [];
+    const whereClauses: string[] = [];
+
     if (search) {
-      const result = await db.$queryRawUnsafe<[{ count: bigint }]>(
-        `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}" WHERE "search_vector" ILIKE $1`,
-        `%${search}%`,
-      );
-      return Number(result[0]?.count ?? 0);
+      params.push(`%${search}%`);
+      whereClauses.push(`"search_vector" ILIKE $${params.length}`);
     }
 
+    if (filterConfig && filterConfig.length > 0) {
+      whereClauses.push(buildFilterClauses(filterConfig, params));
+    }
+
+    const whereClause =
+      whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
     const result = await db.$queryRawUnsafe<[{ count: bigint }]>(
-      `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}"`,
+      `SELECT COUNT(*) as count FROM "spreadsheet_${tableId}" ${whereClause}`,
+      ...params,
     );
     return Number(result[0]?.count ?? 0);
   },

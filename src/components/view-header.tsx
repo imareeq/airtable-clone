@@ -125,6 +125,32 @@ export default function ViewHeader() {
     ? (view.sortConfig as { columnId: string; direction: string }[]).length
     : 0;
 
+  const filterConfig = Array.isArray(view?.filterConfig)
+    ? (
+        view.filterConfig as {
+          columnId: string;
+          operator: string;
+          value: string;
+        }[]
+      ).filter(
+        (f) =>
+          f.value.trim() !== "" ||
+          ["is_empty", "is_not_empty"].includes(f.operator),
+      )
+    : [];
+
+  const filteredColumnIds = [...new Set(filterConfig.map((f) => f.columnId))];
+  const filteredColumns = filteredColumnIds
+    .map((id) => table.columns.find((c) => c.id === id)?.name)
+    .filter(Boolean) as string[];
+
+  const filterLabel = (() => {
+    if (filteredColumns.length === 0) return "Filter";
+    if (filteredColumns.length <= 3)
+      return `Filtered by ${filteredColumns.join(", ")}`;
+    return `Filtered by ${filteredColumns[0]} and ${filteredColumns.length - 1} other fields`;
+  })();
+
   const toolbarItems = [
     {
       icon: <EyeSlashIcon className="size-4" />,
@@ -137,13 +163,19 @@ export default function ViewHeader() {
           ? "bg-primary/20! hover:bg-primary/20! hover:border hover:border-primary/50"
           : "",
       popover: "hide-fields",
+      key: 1,
     },
     {
       icon: <FunnelSimpleIcon className="size-4" />,
-      label: "Filter",
+      label: filterLabel,
       popover: "filter",
+      className:
+        filterConfig.length > 0
+          ? "bg-appearance-green-light! hover:border hover:border-appearance-green/50"
+          : "",
+      key: 2,
     },
-    { icon: <ListBulletsIcon className="size-4" />, label: "Group" },
+    { icon: <ListBulletsIcon className="size-4" />, label: "Group", key: 3 },
     {
       icon: <ArrowsDownUpIcon className="size-4" />,
       label:
@@ -152,16 +184,22 @@ export default function ViewHeader() {
           : "Sort",
       className:
         sortCount > 0
-          ? "bg-appearance-peach-light! hover:bg-primary/20! hover:border hover:border-primary/50"
+          ? "bg-appearance-peach-light! hover:border hover:border-appearance-orange/50"
           : "",
       popover: "sort",
+      key: 4,
     },
-    { icon: <PaintBucketIcon className="size-4" />, label: "Color" },
-    { icon: <TextAlignJustifyIcon className="size-4" />, label: null },
+    { icon: <PaintBucketIcon className="size-4" />, label: "Color", key: 5 },
+    {
+      icon: <TextAlignJustifyIcon className="size-4" />,
+      label: null,
+      key: 6,
+    },
     { icon: <ExportIcon className="size-4" />, label: "Share and sync" },
     {
       icon: <MagnifyingGlassIcon className="size-4" />,
       label: null,
+      key: 7,
       onClick: () => setSearchOpen((v) => !v),
     },
   ];
@@ -249,7 +287,7 @@ export default function ViewHeader() {
         {toolbarItems.map((item, i) => {
           const button = (
             <Button
-              key={i}
+              key={`button-${item.key}`}
               variant="ghost"
               size="sm"
               className={cn(
@@ -264,15 +302,17 @@ export default function ViewHeader() {
           );
 
           if (item.popover === "hide-fields") {
-            return <HideFieldsPopover key={i}>{button}</HideFieldsPopover>;
+            return (
+              <HideFieldsPopover key={item.key}>{button}</HideFieldsPopover>
+            );
           }
 
           if (item.popover === "sort") {
-            return <SortPopover key={i}>{button}</SortPopover>;
+            return <SortPopover key={item.key}>{button}</SortPopover>;
           }
 
           if (item.popover === "filter") {
-            return <FilterPopover key={i}>{button}</FilterPopover>;
+            return <FilterPopover key={item.key}>{button}</FilterPopover>;
           }
 
           return button;
