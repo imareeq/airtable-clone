@@ -23,6 +23,29 @@ export const BASE_COLOR_MAP: Record<BaseColor, string> = {
   [BaseColor.GRAY]: "bg-appearance-gray",
 };
 
+export const BASE_COLOR_TEXT_MAP: Record<BaseColor, string> = {
+  [BaseColor.PINK_LIGHT]: "text-appearance-pink-light/50",
+  [BaseColor.PEACH_LIGHT]: "text-appearance-peach-light",
+  [BaseColor.YELLOW_LIGHT]: "text-appearance-yellow-light",
+  [BaseColor.GREEN_LIGHT]: "text-appearance-green-light",
+  [BaseColor.TEAL_LIGHT]: "text-appearance-teal-light",
+  [BaseColor.SKY_LIGHT]: "text-appearance-sky-light",
+  [BaseColor.BLUE_LIGHT]: "text-appearance-blue-light",
+  [BaseColor.PURPLE_LIGHT]: "text-appearance-purple-light",
+  [BaseColor.LAVENDER_LIGHT]: "text-appearance-lavender-light",
+  [BaseColor.GRAY_LIGHT]: "text-appearance-gray-light",
+  [BaseColor.RED]: "text-appearance-red",
+  [BaseColor.ORANGE]: "text-appearance-orange",
+  [BaseColor.YELLOW]: "text-appearance-yellow",
+  [BaseColor.GREEN]: "text-appearance-green",
+  [BaseColor.TEAL]: "text-appearance-teal",
+  [BaseColor.CYAN]: "text-appearance-cyan",
+  [BaseColor.BLUE]: "text-appearance-blue",
+  [BaseColor.PINK]: "text-appearance-pink",
+  [BaseColor.PURPLE]: "text-appearance-purple",
+  [BaseColor.GRAY]: "text-appearance-gray",
+};
+
 export const BASE_COLOR_ACCENT_MAP: Record<BaseColor, string> = {
   [BaseColor.PINK_LIGHT]: "bg-appearance-pink-light/75",
   [BaseColor.PEACH_LIGHT]: "bg-appearance-peach-light/75",
@@ -50,8 +73,10 @@ export function isBaseColorLight(color: BaseColor): boolean {
   return color.endsWith("_LIGHT");
 }
 
-export function getBaseColorClass(color: BaseColor): string {
-  return BASE_COLOR_MAP[color] ?? "bg-appearance-blue";
+export function getBaseColorClass(color: BaseColor, textClass = false): string {
+  return textClass
+    ? BASE_COLOR_TEXT_MAP[color]
+    : (BASE_COLOR_MAP[color] ?? "bg-appearance-blue");
 }
 
 export function getBaseAccentColorClass(color: BaseColor): string {
