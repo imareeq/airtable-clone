@@ -138,20 +138,25 @@ export default function Page() {
 
     isJumping.current = true;
 
+    const queryKey = {
+      tableId: table.id,
+      search: search || undefined,
+      sortConfig: sortConfig.length > 0 ? sortConfig : undefined,
+      filterConfig:
+        activeFilterConfig.length > 0 ? activeFilterConfig : undefined,
+    };
+
     try {
       const offset = Math.floor((rowNumber - 1) / ROW_LIMIT) * ROW_LIMIT;
       const jumpPage = await utils.table.getRows.fetch({
-        tableId: table.id,
+        ...queryKey,
         cursor: offset,
       });
 
-      utils.table.getRows.setInfiniteData(
-        { tableId: table.id },
-        {
-          pages: [jumpPage],
-          pageParams: [offset],
-        },
-      );
+      utils.table.getRows.setInfiniteData(queryKey, {
+        pages: [jumpPage],
+        pageParams: [offset],
+      });
 
       if (shouldScroll) {
         virtualizer.scrollToIndex(rowNumber - 1, { align: "center" });
