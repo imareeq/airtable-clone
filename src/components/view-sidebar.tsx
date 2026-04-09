@@ -113,7 +113,6 @@ export function ViewSidebar({
     tableId,
   );
 
-  // Focus and select when rename starts, using rAF to wait for context menu close animation
   useEffect(() => {
     if (!renamingViewId) return;
     const frame = requestAnimationFrame(() => {
@@ -123,7 +122,6 @@ export function ViewSidebar({
     return () => cancelAnimationFrame(frame);
   }, [renamingViewId]);
 
-  // Commit rename when clicking outside
   useEffect(() => {
     if (!renamingViewId) return;
     const handleMouseDown = (e: MouseEvent) => {

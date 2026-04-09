@@ -7,6 +7,8 @@ import { Button } from "./ui/button";
 import TableActionsDropdown from "./table-actions-dropdown";
 import { useTableMutations } from "~/hooks/use-table-mutations";
 import { useBase } from "~/hooks/use-base";
+import { useState, useRef, useEffect } from "react";
+import { Input } from "./ui/input";
 
 interface TableTabsProps {
   activeTableId: string;
@@ -23,13 +25,35 @@ export function TableTabs({
   const base = useBase();
   const tables = base.tables;
 
-  const { createTable } = useTableMutations(base.id);
+  const { createTable, updateTable } = useTableMutations(base.id);
+  const [renamingTableId, setRenamingTableId] = useState<string | null>(null);
+  const [renamingName, setRenamingName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (renamingTableId && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [renamingTableId]);
 
   const handleCreateTable = () => {
     createTable.mutate({
       baseId,
       name: `Table ${tables.length + 1}`,
     });
+  };
+
+  const handleRenameSubmit = (tableId: string) => {
+    if (renamingName.trim() && renamingName !== tables.find(t => t.id === tableId)?.name) {
+      updateTable.mutate({ tableId, name: renamingName.trim() });
+    }
+    setRenamingTableId(null);
+  };
+
+  const startRenaming = (tableId: string, currentName: string) => {
+    setRenamingTableId(tableId);
+    setRenamingName(currentName);
   };
 
   const inactiveTextColor = isDarkBackground
@@ -40,6 +64,7 @@ export function TableTabs({
     <>
       {tables.map((table) => {
         const isActive = table.id === activeTableId;
+        const isRenaming = renamingTableId === table.id;
         const path = `/${baseId}/${table.id}`;
 
         return (
@@ -52,14 +77,30 @@ export function TableTabs({
                 : cn("border-transparent pr-3", inactiveTextColor),
             )}
           >
-            <button
-              onClick={() => router.push(path)}
-              onMouseEnter={() => router.prefetch(path)}
-              className="flex h-full cursor-pointer items-center pl-3"
-            >
-              <span>{table.name}</span>
-            </button>
-            {isActive && <TableActionsDropdown />}
+            {isRenaming ? (
+              <Input
+                ref={inputRef}
+                value={renamingName}
+                onChange={(e) => setRenamingName(e.target.value)}
+                onBlur={() => handleRenameSubmit(table.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleRenameSubmit(table.id);
+                  if (e.key === "Escape") setRenamingTableId(null);
+                }}
+                className="h-5 mx-3 w-32 bg-transparent px-1 outline-none"
+              />
+            ) : (
+              <button
+                onClick={() => router.push(path)}
+                onMouseEnter={() => router.prefetch(path)}
+                className="flex h-full cursor-pointer items-center pl-3"
+              >
+                <span>{table.name}</span>
+              </button>
+            )}
+            {isActive && !isRenaming && (
+              <TableActionsDropdown onRename={() => startRenaming(table.id, table.name)} />
+            )}
           </div>
         );
       })}

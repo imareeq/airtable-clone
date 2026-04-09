@@ -41,7 +41,11 @@ type TableMenuItem =
       separator: true;
     };
 
-export default function TableActionsDropdown() {
+export default function TableActionsDropdown({
+  onRename,
+}: {
+  onRename: () => void;
+}) {
   const table = useTable();
   const base = useBase();
   const tables = base.tables;
@@ -52,7 +56,11 @@ export default function TableActionsDropdown() {
   const menuItems: TableMenuItem[] = [
     { label: "Import data", icon: ArrowCircleUpIcon, hasArrow: true },
     { separator: true },
-    { label: "Rename table", icon: PencilSimpleIcon },
+    {
+      label: "Rename table",
+      icon: PencilSimpleIcon,
+      onClick: onRename,
+    },
     { label: "Hide table", icon: EyeSlashIcon },
     { label: "Manage fields", icon: FadersHorizontalIcon },
     { label: "Duplicate table", icon: CopyIcon },
